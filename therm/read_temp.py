@@ -1,14 +1,25 @@
-#!/usr/bin/python
-import sys
-import Adafruit_DHT
+"""Library utils for reading from DHT11 temp sensor via Raspberry Pi GPIO pins.
+
+Contains implementations for generic GPIO and adafruit library implementations.
+
+Probably mostly broken.
+"""
+
+import logging
+
+LOG = logging.getLogger(__name__)
 
 PIN = 4
 
+
 def ada():
+    import Adafruit_DHT
+
     while True:
-        print("Trying to read temp from pin {}".format(PIN))
+        LOG.info("Trying to read temp from pin {}".format(PIN))
         humidity, temperature = Adafruit_DHT.read_retry(11, PIN)
-        print('Temp: {} C  Humidity: {} %'.format(temperature, humidity))
+        LOG.info("Temp: {} C  Humidity: {} %".format(temperature, humidity))
+
 
 def gp2():
     import RPi.GPIO as GPIO
@@ -32,7 +43,9 @@ def gp2():
     for i in range(0, 500):
         data.append(GPIO.input(4))
 
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
 
     bit_count = 0
     tmp = 0
@@ -69,7 +82,7 @@ def gp2():
                     TemperatureBit = TemperatureBit + "0"
 
     except:
-        print("ERR_RANGE")
+        LOG.info("ERR_RANGE")
         exit(0)
 
     try:
@@ -89,23 +102,25 @@ def gp2():
             else:
                 crc = crc + "0"
     except:
-        print("ERR_RANGE")
+        LOG.info("ERR_RANGE")
         exit(0)
 
     Humidity = bin2dec(HumidityBit)
     Temperature = bin2dec(TemperatureBit)
 
     if int(Humidity) + int(Temperature) - int(bin2dec(crc)) == 0:
-        print("Humidity:" + Humidity + "%")
-        print("Temperature:" + Temperature + "C")
+        LOG.info("Humidity:" + Humidity + "%")
+        LOG.info("Temperature:" + Temperature + "C")
     else:
-        print("ERR_CRC")
+        LOG.info("ERR_CRC")
+
 
 def gp():
     import smbus
     import os
     import time
     import RPi.GPIO as GPIO
+
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(17, GPIO.OUT, initial=GPIO.HIGH)
     GPIO.setup(18, GPIO.OUT, initial=GPIO.HIGH)
@@ -138,10 +153,6 @@ def gp():
 
     enable(PIN)
     while True:
-        print("Trying to read temp from pin {}".format(PIN))
+        LOG.info("Trying to read temp from pin {}".format(PIN))
         extemp = temp("external")
-        print('Temp: {} '.format(extemp))
-
-gp2()
-
-
+        LOG.info("Temp: {} ".format(extemp))

@@ -1,9 +1,13 @@
 from flask import render_template
 
 from therm import app
+from .mpl115 import read
+
+LOG = app.logger
 
 
-@app.route('/')
+@app.route("/")
 def index():
-    app.logger.warning('sample message')
-    return render_template('index.html')
+    temp, pres = read()
+    LOG.warning("sample message")
+    return render_template("chaeron.html", inside_temp=temp)
