@@ -2,16 +2,16 @@
 import time
 import logging
 
-from therm import app
+from flask import current_app
 
-LOG = app.logger
+# current_app.logger = current_app.logger
 
 DEMO = False
 
 try:
     import smbus
 except ImportError:
-    LOG.info("Unable to import smbus; assuming demo mode")
+    current_app.logger.info("Unable to import smbus; assuming demo mode")
     DEMO = True
 
 _ADDR = 0x60
@@ -70,10 +70,10 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
 
     temp = 25.0 - (rawtemp - 498.0) / 5.35
     if debug:
-        LOG.info("\nRaw pres = 0x%3x %4d" % (rawpres, rawpres))
-        LOG.info("Raw temp = 0x%3x %4d" % (rawtemp, rawtemp))
-        LOG.info("Pres = %3.2f kPa" % pkpa)
-        LOG.info("Temp = %3.2f c, %3.2f f" % (temp, _ctof(temp)))
+        current_app.logger.info("\nRaw pres = 0x%3x %4d" % (rawpres, rawpres))
+        current_app.logger.info("Raw temp = 0x%3x %4d" % (rawtemp, rawtemp))
+        current_app.logger.info("Pres = %3.2f kPa" % pkpa)
+        current_app.logger.info("Temp = %3.2f c, %3.2f f" % (temp, _ctof(temp)))
     return _ctof(temp), pkpa
 
 
@@ -83,12 +83,12 @@ def read(debug=False):
         try:
             return _read_mpl(debug=debug)
         except OSError as _:
-            LOG.info("Sensor not detected; check connections. Entering demo mode.")
+            current_app.logger.info("Sensor not detected; check connections. Entering demo mode.")
             DEMO = True
             return 69.0, 103.05
     else:
-        LOG.info("Fake temp: 69\nFake Pres: 103.05")
-        LOG.info("Fake temp: 69\nFake Pres: 103.05")
+        current_app.logger.info("Fake temp: 69\nFake Pres: 103.05")
+        current_app.logger.info("Fake temp: 69\nFake Pres: 103.05")
         return 69.0, 103.05
 
 

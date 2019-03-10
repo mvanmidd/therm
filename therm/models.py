@@ -1,9 +1,7 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
-from therm import app
-
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 
 class Sample(db.Model):
@@ -13,8 +11,15 @@ class Sample(db.Model):
     pressure = db.Column(db.Float)
     location = db.Column(db.String(20))
 
+    def _asdict(self):
+        d = {}
+        for column in Sample.__table__.columns:
+            d[column.name] = str(getattr(self, column.name))
+        return d
+
     def __repr__(self):
         return "<Sample {} {}: Temp {} Pres {}>".format(self.time.strftime('%Y-%m-%d %H:%M'),
                                                         self.location,
                                                         self.temp,
                                                         self.pressure)
+

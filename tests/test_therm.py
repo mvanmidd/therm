@@ -3,14 +3,12 @@ import unittest
 import therm
 
 
-class ThermTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = therm.app.test_client()
-
-    def test_index(self):
-        rv = self.app.get("/")
-        self.assertIn("Welcome to therm", rv.data.decode())
+def test_get_samples(client, temp_data):
+    results = client.get("/samples").get_json()
+    print(results)
+    assert len(results) == len(temp_data)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_get_main(client):
+    rv = client.get("/")
+    assert "Temp: " in rv.data.decode()

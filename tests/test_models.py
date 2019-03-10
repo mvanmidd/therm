@@ -3,6 +3,8 @@ import pytest
 
 from therm.models import db as _db
 
+
+
 # TODO: how to hook into create_app with proper settings
 #
 #
