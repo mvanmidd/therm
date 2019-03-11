@@ -23,7 +23,9 @@ Any DB that SQLALchemy can talk to works. To configure your DB, set the
 following environment variables (or handcode them in `therm.settings` if you're
 feeling bold):
 ```bash
-
+export THERM_DB_URL=thermdb.cln2j9a8fio32eu.us-east-1.rds.amazonaws.com
+export THERM_DB_UNAME=thermuser
+export THERM_DB_PASS=correct-horse-battery-staple
 ```
 
 ### Run
