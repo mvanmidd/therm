@@ -1,21 +1,17 @@
-#!/usr/bin/python
+"""MPL115 temp sensor functions, adapted from https://www.raspberrypi.org/forums/viewtopic.php?t=91185"""
 import time
-import logging
 
 from flask import current_app
+import smbus
 
 # current_app.logger = current_app.logger
 
-DEMO = False
-
-try:
-    import smbus
-except ImportError:
-    current_app.logger.info("Unable to import smbus; assuming demo mode")
-    DEMO = True
 
 _ADDR = 0x60
 _BUS_ID = 1
+
+_TEMP_CALIB_F = 3.0
+"""Adjustment to temp sensor, in degrees Farenheit"""
 
 
 def _ctof(c):
@@ -78,18 +74,18 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
 
 
 def read(debug=False):
-    global DEMO
-    if not DEMO:
-        try:
-            return _read_mpl(debug=debug)
-        except OSError as _:
-            current_app.logger.info("Sensor not detected; check connections. Entering demo mode.")
-            DEMO = True
-            return 69.0, 103.05
-    else:
-        current_app.logger.info("Fake temp: 69\nFake Pres: 103.05")
-        current_app.logger.info("Fake temp: 69\nFake Pres: 103.05")
-        return 69.0, 103.05
+    """Read temp and humidity from sensor.
+
+    Args:
+        debug:
+
+    Returns:
+        tuple(float, float): temperature, humidity
+
+    """
+    temp, humidity = _read_mpl(debug=debug)
+    temp += _TEMP_CALIB_F
+    return temp, humidity
 
 
 if __name__ == "__main__":

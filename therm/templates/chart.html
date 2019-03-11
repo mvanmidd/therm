@@ -1,0 +1,112 @@
+<meta charset="utf-8">
+<!--<META HTTP-EQUIV="refresh" CONTENT="5">-->
+<title>RaspiTherm</title>
+<!-- Based on http://tobiasahlin.com/blog/chartjs-charts-to-get-you-started/#2-line-chart -->
+
+<!-- import plugin script -->
+<script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
+<h1>Current Temp: {{ '%0.2f'| format(inside_temp) }}</h1>
+<!-- bar chart canvas element -->
+<body>
+<!--<canvas id="line-chart" width="640" height="400" style="height: 100%; width: 100%; border:1px solid #000000;"></canvas>-->
+<canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
+<!--<canvas id="line-chart" width="320" height="200"></canvas>-->
+
+</body>
+
+<script>
+    var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
+    var values = [{% for item in values %} "{{item}}", {% endfor %}]
+    <!--var canvas = document.getElementById("line-chart").getContext("2d");-->
+    <!--canvas.width  = window.innerWidth;-->
+    <!--canvas.height = window.innerHeight;-->
+
+    chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+              data: values,
+              label: "Temperature",
+              borderColor: "#3e95cd",
+              fill: false
+            }
+            ]
+        },
+        options: {
+            title: {
+              display: false,
+            },
+            legend: {
+                display: false,
+            },
+            animation: {
+                duration: 0
+            },
+            responsive: false,
+            maintainAspectRatio: false,
+            tooltips: {enabled: false},
+            hover: {mode: null},
+            scales: {
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                        suggestedMin: {{ y_min }},
+                        suggestedMax: {{ y_max }},
+                    }
+                }],
+                xAxes: [{
+                    display: true,
+                }]
+            }
+        }
+    });
+    <!--chart.canvas.parentNode.style.height = '200px';-->
+    <!--chart.canvas.parentNode.style.width = '320px';-->
+</script>
+<!--<script>-->
+   <!--// bar chart data-->
+   <!--var barData = {-->
+   <!--labels : [{% for item in labels %}-->
+                  <!--"{{item}}",-->
+              <!--{% endfor %}],-->
+   <!--datasets : [-->
+      <!--{-->
+            <!--fillColor: "rgba(151,187,205,0.2)",-->
+            <!--strokeColor: "rgba(151,187,205,1)",-->
+            <!--pointColor: "rgba(151,187,205,1)",-->
+            <!--pointStrokeColor: "#fff",-->
+            <!--pointHighlightFill: "#fff",-->
+            <!--pointHighlightStroke: "rgba(151,187,205,1)",-->
+            <!--bezierCurve : false,-->
+            <!--data : [{% for item in values %}-->
+                      <!--{{item}},-->
+                    <!--{% endfor %}]-->
+      <!--}]-->
+   <!--}-->
+    <!--Chart.defaults.global.animationSteps = 50;-->
+    <!--Chart.defaults.global.tooltipYPadding = 16;-->
+    <!--Chart.defaults.global.tooltipCornerRadius = 0;-->
+    <!--Chart.defaults.global.tooltipTitleFontStyle = "normal";-->
+    <!--Chart.defaults.global.tooltipFillColor = "rgba(0,0,0,0.8)";-->
+    <!--Chart.defaults.global.animationEasing = "easeOutBounce";-->
+    <!--Chart.defaults.global.responsive = false;-->
+    <!--Chart.defaults.global.scaleLineColor = "black";-->
+    <!--Chart.defaults.global.scaleFontSize = 16;-->
+    <!--// get bar chart canvas-->
+    <!--var mychart = document.getElementById("chart").getContext("2d");-->
+   <!--steps = 10-->
+   <!--max = 10-->
+   <!--// draw bar chart-->
+   <!--new Chart(document.getElementById("chart").Line(barData, {-->
+        <!--scaleOverride: true,-->
+        <!--scaleSteps: steps,-->
+        <!--scaleStepWidth: Math.ceil(max / steps),-->
+        <!--scaleStartValue: 0,-->
+        <!--scaleShowVerticalLines: true,-->
+        <!--scaleShowGridLines : true,-->
+        <!--barShowStroke : true,-->
+        <!--scaleShowLabels: true,-->
+        <!--bezierCurve: false,-->
+   <!--});-->
+<!--</script>-->

@@ -2,6 +2,7 @@ import os
 
 
 class Default(object):
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     DB_URL = os.environ.get("THERM_DB_URL")
     DB_UNAME = os.environ.get("THERM_DB_UNAME")
     DB_PASS = os.environ.get("THERM_DB_PASS")
@@ -15,6 +16,7 @@ class Default(object):
 
 
 class Test(Default):
+    ENV = "Test"
     TESTING = True
     DB_NAME = "test"
 
@@ -24,8 +26,10 @@ class Test(Default):
 
 
 class Development(Default):
+    ENV = "Development"
     DEBUG = True
 
 
 class Production(Default):
+    ENV = "Production"
     DEBUG = False
