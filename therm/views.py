@@ -37,7 +37,7 @@ def _plot_temps(samples):
     """Generate template params for plotting the given temps
 
     Args:
-        temps (list[Sample]):
+        temps (list[Sample]): Latest temp samples in sequential order
 
     Returns:
         dict: params for template
@@ -51,12 +51,19 @@ def _plot_temps(samples):
     ymax = max([s.temp for s in samples]) + 4
     return {"labels": labels, "values": values, "inside_temp": inside_temp, "y_min": ymin, "y_max": ymax}
 
+def _get_set_point():
+    state = State.latest()
+    if state and state.set_point_enabled:
+        return state.set_point
+    else:
+        return "off"
 
 @root.route("/chart")
 def chart():
-    latest = list(reversed(Sample.latest(limit=20)))
-    params = _plot_temps(latest)
-    return render_template("chart.html", **params)
+    latest_samples = list(reversed(Sample.latest(limit=20)))
+    temp_graph_params = _plot_temps(latest_samples)
+    temp_graph_params['set_point'] = _get_set_point()
+    return render_template("chart.html", **temp_graph_params)
 
 
 @root.route("/")

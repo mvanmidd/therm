@@ -1,25 +1,17 @@
 <meta charset="utf-8">
-<!--<META HTTP-EQUIV="refresh" CONTENT="5">-->
+<META HTTP-EQUIV="refresh" CONTENT="5">
 <title>RaspiTherm</title>
-<!-- Based on http://tobiasahlin.com/blog/chartjs-charts-to-get-you-started/#2-line-chart -->
 
-<!-- import plugin script -->
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
-<h1>Current Temp: {{ '%0.2f'| format(inside_temp) }}</h1>
-<!-- bar chart canvas element -->
+<h1>Temp: {{ '%0.2f'| format(inside_temp) }}   Set Point: {{ set_point }}</h1>
 <body>
-<!--<canvas id="line-chart" width="640" height="400" style="height: 100%; width: 100%; border:1px solid #000000;"></canvas>-->
 <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
-<!--<canvas id="line-chart" width="320" height="200"></canvas>-->
 
 </body>
 
 <script>
     var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
     var values = [{% for item in values %} "{{item}}", {% endfor %}]
-    <!--var canvas = document.getElementById("line-chart").getContext("2d");-->
-    <!--canvas.width  = window.innerWidth;-->
-    <!--canvas.height = window.innerHeight;-->
 
     chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
         type: 'line',

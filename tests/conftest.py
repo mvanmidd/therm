@@ -1,16 +1,11 @@
 from datetime import datetime, timedelta
 import itertools
-import os
-import tempfile
 import random
 
 import pytest
 from therm import create_app
-from therm.models import db, Sample
+from therm.models import db, Sample, State
 
-# read in SQL for populating test data
-# with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
-#     _data_sql = f.read().decode('utf8')
 
 
 @pytest.fixture
@@ -31,7 +26,7 @@ def app():
 
 
 @pytest.fixture
-def temp_data(app):
+def fake_samples(app):
     start_time = datetime.strptime("2018-06-01T00:00:00", "%Y-%m-%dT%H:%M:%S")
     samples_coarse = [
         Sample(temp=random.randrange(40, 80), time=start_time + timedelta(hours=i)) for i in range(10)
@@ -52,8 +47,15 @@ def temp_data(app):
         for samp in samples_fine:
             db.session.add(samp)
         db.session.commit()
-    return samples_fine
+        yield samples_fine
 
+@pytest.fixture
+def fake_state(app):
+    with app.app_context():
+        state = State(id=123, set_point=72, set_point_enabled=True)
+        db.session.add(state)
+        db.session.commit()
+        yield state
 
 @pytest.fixture
 def client(app):
@@ -65,19 +67,3 @@ def client(app):
 def runner(app):
     """A test runner for the app's Click commands."""
     return app.test_cli_runner()
-
-
-class AuthActions(object):
-    def __init__(self, client):
-        self._client = client
-
-    def login(self, username="test", password="test"):
-        return self._client.post("/auth/login", data={"username": username, "password": password})
-
-    def logout(self):
-        return self._client.get("/auth/logout")
-
-
-@pytest.fixture
-def auth(client):
-    return AuthActions(client)

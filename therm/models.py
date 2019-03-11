@@ -5,6 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 DEFAULT_LOCATION = None
 
+
 class Base(Model):
     """Shared functionality for therm models."""
 
@@ -39,7 +40,7 @@ class Base(Model):
     def _asdict(self):
         d = {}
         for column in self.__table__.columns:
-            d[column.name] = str(getattr(self, column.name))
+            d[column.name] = getattr(self, column.name)
         return d
 
 
@@ -50,9 +51,29 @@ class State(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     time = db.Column(db.DateTime, default=datetime.utcnow)
     set_point = db.Column(db.Float, nullable=False)
-    enabled = db.Column(db.Boolean, nullable=False, default=False)
+    set_point_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    heat_on = db.Column(db.Boolean, nullable=False, default=False)
     location = db.Column(db.String(20), default=DEFAULT_LOCATION)
     # latest_samples = db.relationship("Sample", backref="state", lazy=True)
+
+    @classmethod
+    def update_state(cls, attr_name, value):
+        """Update the given state attribute to the given value.
+
+        If the given attr_name, value are consistent with the current state, do nothing.
+
+        Else, create a copy of the current state, update attr_name, and insert.
+        """
+        current_state = cls.latest()
+        if getattr(current_state, attr_name) != value:
+            new_attrs = current_state._asdict()
+            new_attrs.pop('id')
+            new_attrs.pop('time')
+            new_attrs[attr_name] = value
+            new_state = cls(**new_attrs)
+            db.session.add(new_state)
+            db.session.commit()
+
 
 
 class Sample(db.Model):

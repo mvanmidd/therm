@@ -77,6 +77,9 @@ def create_app(config_env=None):
         relay.init()
         buttons.init()
 
+        def on_off():
+            """Handle on/off button."""
+            relay.flip()
         buttons.register_on_off(relay.flip)
 
         n_read = 0
@@ -135,7 +138,7 @@ def create_app(config_env=None):
             db.session.add(samp)
         click.echo("Added {} Samples to db {}".format(len(samples_fine), current_app.config["DB_URL"]))
 
-        state = State(set_point=72, enabled=True)
+        state = State(set_point=72, set_point_enabled=True)
         db.session.add(state)
         click.echo("Added 1 State to db {}".format(current_app.config["DB_URL"]))
         db.session.commit()
