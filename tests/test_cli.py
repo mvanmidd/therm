@@ -1,6 +1,5 @@
 import pytest
 from pytest_mock import mocker
-import mock
 
 import therm.cli as cli
 from therm.models import db, Sample, State

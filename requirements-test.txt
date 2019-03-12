@@ -1,2 +1,3 @@
 pytest
+pytest-mock
 fake-rpi
