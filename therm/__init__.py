@@ -1,5 +1,7 @@
 import os
+import warnings
 
+from flask import Flask
 
 # Import fake rpi libraries if we're not on a raspberry pi
 try:
@@ -19,13 +21,10 @@ except ImportError:
     import smbus
 
 
-from flask import Flask
-
 from therm.models import Sample, State, db
 from therm import settings, relay, buttons
 
 # Flask-sqlalchemy has some deprecationwarnings; squish em https://github.com/pallets/flask-sqlalchemy/issues/671
-import warnings
 from sqlalchemy import exc
 
 warnings.filterwarnings("ignore", category=exc.SADeprecationWarning)

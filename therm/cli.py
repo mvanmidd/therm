@@ -9,9 +9,8 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from therm import relay, buttons
-from therm.models import Sample, db, State
-from therm.mpl115 import read
+from . import relay, buttons, mpl115
+from .models import Sample, db, State
 
 POLL_INTERVAL = 5
 """Temp sensor polling interval in seconds."""
@@ -19,12 +18,14 @@ POLL_LOCKFILE = "/tmp/polling"
 """Lock file for polling process."""
 TEMP_WINDOW = 1
 """Only adjust thermostat when temp is outside range of target +/- TEMP_WINDOW."""
+TEMP_INCREMENT = 0.5
+"""Increment for up/down buttons."""
 
 
 def _poll_once():
     """The main poll / update loop to run on raspberry pi."""
     # Poll sensor
-    temp, pressure = read()
+    temp, pressure = mpl115.read()
     sample = Sample(temp=temp, pressure=pressure)
     db.session.add(sample)
     db.session.commit()
@@ -35,6 +36,7 @@ def _poll_once():
         click.echo("Not performing thermostat control; no target found")
         return
 
+    click.echo("Target {}; temp {}".format(latest_state.set_point, temp))
     if latest_state.set_point > (temp + TEMP_WINDOW) and State.update_state("heat_on", True):
         click.echo("Target {}; temp {}: THERM ON".format(latest_state.set_point, temp))
         relay.on()
@@ -43,16 +45,35 @@ def _poll_once():
         relay.off()
 
 
+def on_off():
+    """Handle on/off button."""
+    if State.update_state("set_point_enabled", False):
+        click.echo("Manual update to heater state; disabling set point.")
+    relay.flip()
+
+
+def _adjust_temp(delta):
+    latest = State.latest()
+    State.update_state("set_point", latest.set_point + delta)
+    if State.update_state("set_point_enabled", True):
+        click.echo("Temperature adjusted with set point disabled, enabling set point.")
+
+
+def up():
+    """Handle temperature up button."""
+    _adjust_temp(TEMP_INCREMENT)
+
+
+def down():
+    """Handle temperature down button."""
+    _adjust_temp(TEMP_INCREMENT * -1.0)
+
+
 def _register_buttons():
     """Register callbacks for the buttons on the raspi."""
-
-    def on_off():
-        """Handle on/off button."""
-        if State.update_state("set_point_enabled", False):
-            click.echo("Manual update to heater state; disabling set point.")
-        relay.flip()
-
-    buttons.register_on_off(relay.flip)
+    buttons.register_on_off(on_off)
+    buttons.register_temp_up(up)
+    buttons.register_temp_down(down)
 
 
 def _validate_state():
@@ -65,7 +86,7 @@ def _validate_state():
                 latest.heat_on, latest.time.isoformat(), relay_state
             )
         )
-        State.update_state('heat_on', relay_state)
+        State.update_state("heat_on", relay_state)
 
 
 @click.command("poll")
@@ -87,7 +108,8 @@ def poll_temp_sensor(force):
 
     relay.init()
     buttons.init()
-    n_read = 0
+    _register_buttons()
+
     try:
         while True:
             _poll_once()
