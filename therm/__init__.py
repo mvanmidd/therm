@@ -11,27 +11,6 @@ except ImportError:
 
     # by default it prints everything to std.error
     fake_rpi.toggle_print(False)  # turn off printing
-    #
-    # from therm.relay import HEAT_GPIO
-    # from random import randint
-    #
-    # # Monkeypatch smbus.GPIO to preserve state of heater i/o pin
-    # class MyGPIO(fake_rpi.RPi._GPIO):
-    #     heater_state = 0
-    #
-    #     def input(self, a):
-    #         print("CALLED")
-    #         if a == HEAT_GPIO:
-    #             return self.heater_state
-    #         else:
-    #             return randint(0, 1)
-    #
-    #     def output(self, channel, state):
-    #         print("CALLED")
-    #         if channel == HEAT_GPIO:
-    #             self.heater_state = state
-    #
-    # fake_rpi.RPi.GPIO = MyGPIO()
 
     sys.modules["RPi"] = fake_rpi.RPi  # Fake RPi (GPIO)
     sys.modules["smbus"] = fake_rpi.smbus  # Fake smbus (I2C)
