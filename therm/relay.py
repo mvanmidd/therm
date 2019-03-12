@@ -1,6 +1,7 @@
 try:
     import smbus
     import RPi
+    from RPi import GPIO
 except ImportError:
     # Replace libraries by fake ones
     import sys
@@ -9,8 +10,8 @@ except ImportError:
     sys.modules["RPi"] = fake_rpi.RPi  # Fake RPi (GPIO)
     sys.modules["smbus"] = fake_rpi.smbus  # Fake smbus (I2C)
     import RPi
+    from RPi import GPIO
 
-from RPi import GPIO
 
 
 HEAT_GPIO = 4  # GPIO 4, Physical pin 7 on raspi. LOW turns relay on.
@@ -33,7 +34,10 @@ def is_on():
     return not GPIO.input(HEAT_GPIO)
 
 def flip():
+    """Flip the heater state and return new state."""
     if is_on():
         off()
+        return False
     else:
         on()
+        return True

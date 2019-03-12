@@ -13,16 +13,16 @@ _BUS_ID = 1
 _TEMP_CALIB_F = 3.0
 """Adjustment to temp sensor, in degrees Farenheit"""
 
+_BUS = smbus.SMBus(_BUS_ID)
 
 def _ctof(c):
     return c * (9.0 / 5.0) + 32
 
 
-def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
-    bus = smbus.SMBus(bus_id)
+def _read_mpl(addr=_ADDR, debug=False):
 
     # a0: 16 bits - 1 sign, 12 int, 3 frac
-    a0 = (bus.read_byte_data(addr, 0x04) << 8) | bus.read_byte_data(addr, 0x05)
+    a0 = (_BUS.read_byte_data(addr, 0x04) << 8) | _BUS.read_byte_data(addr, 0x05)
     if a0 & 0x8000:
         a0d = -((~a0 & 0xFFFF) + 1)
     else:
@@ -30,7 +30,7 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
     a0f = float(a0d) / 8.0
 
     # b1: 16 bits - 1 sign, 2 int, 13 frac
-    b1 = (bus.read_byte_data(addr, 0x06) << 8) | bus.read_byte_data(addr, 0x07)
+    b1 = (_BUS.read_byte_data(addr, 0x06) << 8) | _BUS.read_byte_data(addr, 0x07)
     if b1 & 0x8000:
         b1d = -((~b1 & 0xFFFF) + 1)
     else:
@@ -38,7 +38,7 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
     b1f = float(b1d) / 8192.0
 
     # b2: 16 bits - 1 sign, 1 int, 14 frac
-    b2 = (bus.read_byte_data(addr, 0x08) << 8) | bus.read_byte_data(addr, 0x09)
+    b2 = (_BUS.read_byte_data(addr, 0x08) << 8) | _BUS.read_byte_data(addr, 0x09)
     if b2 & 0x8000:
         b2d = -((~b2 & 0xFFFF) + 1)
     else:
@@ -47,7 +47,7 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
 
     # c12: 14 bits - 1 sign, 0 int, 13 frac
     # (Documentation in the datasheet is poor on this.)
-    c12 = (bus.read_byte_data(addr, 0x0A) << 8) | bus.read_byte_data(addr, 0x0B)
+    c12 = (_BUS.read_byte_data(addr, 0x0A) << 8) | _BUS.read_byte_data(addr, 0x0B)
     if c12 & 0x8000:
         c12d = -((~c12 & 0xFFFF) + 1)
     else:
@@ -55,11 +55,11 @@ def _read_mpl(bus_id=_BUS_ID, addr=_ADDR, debug=False):
     c12f = float(c12d) / 16777216.0
 
     # Start conversion and wait 3mS
-    bus.write_byte_data(addr, 0x12, 0x0)
+    _BUS.write_byte_data(addr, 0x12, 0x0)
     time.sleep(0.003)
 
-    rawpres = (bus.read_byte_data(addr, 0x00) << 2) | (bus.read_byte_data(addr, 0x01) >> 6)
-    rawtemp = (bus.read_byte_data(addr, 0x02) << 2) | (bus.read_byte_data(addr, 0x03) >> 6)
+    rawpres = (_BUS.read_byte_data(addr, 0x00) << 2) | (_BUS.read_byte_data(addr, 0x01) >> 6)
+    rawtemp = (_BUS.read_byte_data(addr, 0x02) << 2) | (_BUS.read_byte_data(addr, 0x03) >> 6)
 
     pcomp = a0f + (b1f + c12f * rawtemp) * rawpres + b2f * rawtemp
     pkpa = pcomp / 15.737 + 50

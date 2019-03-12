@@ -18,7 +18,7 @@ class Base(Model):
             location (str): filter by location
 
         Returns:
-            Base or list[Base]
+            cls: Latest row(s)
 
         """
         """Return latest sample, optionally filtered by location."""
@@ -54,7 +54,6 @@ class State(db.Model):
     set_point_enabled = db.Column(db.Boolean, nullable=False, default=False)
     heat_on = db.Column(db.Boolean, nullable=False, default=False)
     location = db.Column(db.String(20), default=DEFAULT_LOCATION)
-    # latest_samples = db.relationship("Sample", backref="state", lazy=True)
 
     @classmethod
     def update_state(cls, attr_name, value):
@@ -63,17 +62,22 @@ class State(db.Model):
         If the given attr_name, value are consistent with the current state, do nothing.
 
         Else, create a copy of the current state, update attr_name, and insert.
+
+        Returns:
+            bool: Whether the state changed
         """
         current_state = cls.latest()
         if getattr(current_state, attr_name) != value:
             new_attrs = current_state._asdict()
-            new_attrs.pop('id')
-            new_attrs.pop('time')
+            new_attrs.pop("id")
+            new_attrs.pop("time")
             new_attrs[attr_name] = value
             new_state = cls(**new_attrs)
             db.session.add(new_state)
             db.session.commit()
-
+            return True
+        else:
+            return False
 
 
 class Sample(db.Model):
@@ -82,7 +86,6 @@ class Sample(db.Model):
     temp = db.Column(db.Float, nullable=False)
     pressure = db.Column(db.Float)
     location = db.Column(db.String(20), default=DEFAULT_LOCATION)
-    # state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
 
     def __repr__(self):
         return "<Sample {} {}: Temp {} Pres {}>".format(
