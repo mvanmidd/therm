@@ -79,6 +79,11 @@ class State(db.Model):
         else:
             return False
 
+    def __repr__(self):
+        return "<State {}: Set {}, Set temp {}, Heat on {}>".format(
+            self.time.strftime("%Y-%m-%d %H:%M"), self.set_point_enabled, self. set_point, self.heat_on
+        )
+
 
 class Sample(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

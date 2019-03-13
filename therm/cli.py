@@ -1,8 +1,8 @@
+import asyncio
 import itertools
 import os
 import random
 import sys
-import time
 from datetime import datetime, timedelta
 
 import click
@@ -21,6 +21,8 @@ TEMP_WINDOW = 1
 TEMP_INCREMENT = 0.5
 """Increment for up/down buttons."""
 
+loop = asyncio.get_event_loop()
+
 
 def _poll_once():
     """The main poll / update loop to run on raspberry pi."""
@@ -37,19 +39,28 @@ def _poll_once():
         return
 
     click.echo("Target {}; temp {}".format(latest_state.set_point, temp))
-    if latest_state.set_point > (temp + TEMP_WINDOW) and State.update_state("heat_on", True):
-        click.echo("Target {}; temp {}: THERM ON".format(latest_state.set_point, temp))
-        relay.on()
-    elif latest_state.set_point < (temp - TEMP_WINDOW) and State.update_state("heat_on", False):
-        click.echo("Target {}; temp {}: THERM OFF".format(latest_state.set_point, temp))
-        relay.off()
+    if latest_state.set_point_enabled:
+        if latest_state.set_point > (temp + TEMP_WINDOW) and State.update_state("heat_on", True):
+            click.echo("Target {}; temp {}: THERM ON".format(latest_state.set_point, temp))
+            relay.on()
+        elif latest_state.set_point < (temp - TEMP_WINDOW) and State.update_state("heat_on", False):
+            click.echo("Target {}; temp {}: THERM OFF".format(latest_state.set_point, temp))
+            relay.off()
+
+
+async def _poll_forever():
+    while True:
+        _poll_once()
+        _validate_state()
+        await asyncio.sleep(POLL_INTERVAL)
 
 
 def on_off():
     """Handle on/off button."""
     if State.update_state("set_point_enabled", False):
         click.echo("Manual update to heater state; disabling set point.")
-    relay.flip()
+    State.update_state('heat_on', relay.flip())
+    click.echo("New state: {}".format(State.latest()))
 
 
 def _adjust_temp(delta):
@@ -71,9 +82,9 @@ def down():
 
 def _register_buttons():
     """Register callbacks for the buttons on the raspi."""
-    buttons.register_on_off(on_off)
-    buttons.register_temp_up(up)
-    buttons.register_temp_down(down)
+    buttons.register_on_off(lambda: loop.call_soon_threadsafe(on_off))
+    buttons.register_temp_up(lambda: loop.call_soon_threadsafe(up))
+    buttons.register_temp_down(lambda: loop.call_soon_threadsafe(down))
 
 
 def _validate_state():
@@ -87,6 +98,12 @@ def _validate_state():
             )
         )
         State.update_state("heat_on", relay_state)
+
+def _setup():
+
+    relay.init()
+    buttons.init()
+    _register_buttons()
 
 
 @click.command("poll")
@@ -106,15 +123,12 @@ def poll_temp_sensor(force):
         lockfile.write(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"))
         click.echo("Obtained lock at {}".format(POLL_LOCKFILE))
 
-    relay.init()
-    buttons.init()
-    _register_buttons()
+
+    _setup()
+    task = loop.create_task(_poll_forever())
 
     try:
-        while True:
-            _poll_once()
-            _validate_state()
-            time.sleep(POLL_INTERVAL)
+        loop.run_until_complete(task)
 
     except KeyboardInterrupt:
         os.remove(POLL_LOCKFILE)
