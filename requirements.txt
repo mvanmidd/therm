@@ -1,4 +1,6 @@
 flask
 flask-sqlalchemy
 psycopg2
+pandas
+boto3
 Pillow

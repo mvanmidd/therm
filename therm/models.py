@@ -1,5 +1,8 @@
 from datetime import datetime
+
+
 from flask_sqlalchemy import SQLAlchemy, Model
+import pandas as pd
 from sqlalchemy.orm.exc import NoResultFound
 
 
@@ -8,6 +11,8 @@ DEFAULT_LOCATION = None
 
 class Base(Model):
     """Shared functionality for therm models."""
+
+    DEFAULT_TIMESERIES = None
 
     @classmethod
     def latest(cls, limit=1, location=None, strict=False):
@@ -21,7 +26,6 @@ class Base(Model):
             cls: Latest row(s)
 
         """
-        """Return latest sample, optionally filtered by location."""
         query = cls.query
         if location:
             query = query.filter_by(location=location)
@@ -35,7 +39,26 @@ class Base(Model):
                 else:
                     return None
         else:
-            return query.limit(limit).all()
+            return list(reversed(query.limit(limit).all()))
+
+    @classmethod
+    def since(cls, tmin, tmax=None, limit=10000):
+        """
+
+        Args:
+            tmin:
+            tmax:
+
+        Returns:
+
+        """
+        query = cls.query
+        query = query.filter(cls.time >= tmin)
+        if tmax:
+            query = query.filter(cls.time < tmax)
+        query = query.order_by(cls.time.asc())
+        return query.limit(limit).all()
+
 
     def _asdict(self):
         d = {}
@@ -43,6 +66,38 @@ class Base(Model):
             d[column.name] = getattr(self, column.name)
         return d
 
+    @classmethod
+    def timeseries(cls, rows, attr_name=None):
+        """
+
+        Args:
+            rows: rows to convert
+            attr_name: Attribute to generate timeseries for. default is cls.DEFAULT_TIMESERIES
+
+        Returns:
+            ps.Series: timeseries
+
+        """
+        attr_name = attr_name or cls.DEFAULT_TIMESERIES
+        return pd.Series(data=[getattr(s, attr_name) for s in rows], index=pd.Index(data=[s.time for s in rows], dtype='datetime64[ns]'))
+    #
+    # @classmethod
+    # def timeseries(cls, limit=10, since=None, attr_name=None):
+    #     """Generature pandas timeseries of latest data.
+    #
+    #     Args:
+    #         limit: number of samples
+    #         since:  (not implemented)
+    #         attr_name: Attribute to generate timeseries for. default is cls.DEFAULT_TIMESERIES
+    #
+    #     Returns:
+    #
+    #
+    #     """
+    #     samples = cls.latest(limit=limit)
+    #     attr_name = attr_name or cls.DEFAULT_TIMESERIES
+    #     return pd.Series(data=[getattr(s, attr_name) for s in samples], index=[s.time for s in samples])
+    #
 
 db = SQLAlchemy(model_class=Base)
 
@@ -54,6 +109,19 @@ class State(db.Model):
     set_point_enabled = db.Column(db.Boolean, nullable=False, default=False)
     heat_on = db.Column(db.Boolean, nullable=False, default=False)
     location = db.Column(db.String(20), default=DEFAULT_LOCATION)
+
+    DEFAULT_TIMESERIES = "set_point"
+
+    @classmethod
+    def refresh(cls):
+        """Rewrite the latest state"""
+        current_state = cls.latest()
+        new_attrs = current_state._asdict()
+        new_attrs.pop("id")
+        new_attrs.pop("time")
+        new_state = cls(**new_attrs)
+        db.session.add(new_state)
+        db.session.commit()
 
     @classmethod
     def update_state(cls, attr_name, value):
@@ -81,7 +149,7 @@ class State(db.Model):
 
     def __repr__(self):
         return "<State {}: Set {}, Set temp {}, Heat on {}>".format(
-            self.time.strftime("%Y-%m-%d %H:%M"), self.set_point_enabled, self. set_point, self.heat_on
+            self.time.strftime("%Y-%m-%d %H:%M"), self.set_point_enabled, self.set_point, self.heat_on
         )
 
 
@@ -91,6 +159,8 @@ class Sample(db.Model):
     temp = db.Column(db.Float, nullable=False)
     pressure = db.Column(db.Float)
     location = db.Column(db.String(20), default=DEFAULT_LOCATION)
+
+    DEFAULT_TIMESERIES = "temp"
 
     def __repr__(self):
         return "<Sample {} {}: Temp {} Pres {}>".format(

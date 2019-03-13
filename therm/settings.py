@@ -9,6 +9,11 @@ class Default(object):
     DB_NAME = "therm"
     LOG_DIR = "."
 
+    SQS_QUEUE_NAME = 'therm-heartbeat'
+    SNS_TOPIC_NAME = 'therm-alerts'
+    HEARTBEAT_ALARM_NAME = 'therm-heartbeat-stopped'
+    ALARM_PERIOD = 600
+
     def __init__(self):
         self.SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:5432/{}".format(
             self.DB_UNAME, self.DB_PASS, self.DB_URL, self.DB_NAME
@@ -26,6 +31,7 @@ class Test(Default):
 
 
 class Development(Default):
+    ALARM_PERIOD = 300
     ENV = "Development"
     DEBUG = True
 
