@@ -15,8 +15,6 @@ import boto3
 from . import relay, buttons, mpl115
 from .models import Sample, db, State
 
-POLL_INTERVAL = 5
-"""Temp sensor polling interval in seconds."""
 POLL_LOCKFILE = "/tmp/polling"
 """Lock file for polling process."""
 TEMP_WINDOW = 1
@@ -66,7 +64,7 @@ async def _poll_forever(to_sqs=False):
     while True:
         _poll_once(to_sqs)
         _validate_state()
-        await asyncio.sleep(POLL_INTERVAL)
+        await asyncio.sleep(current_app.config["POLL_INTERVAL"])
 
 
 def on_off():
