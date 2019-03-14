@@ -1,3 +1,5 @@
 pytest
 pytest-mock
+flask-shell-ipython
+jupyter
 fake-rpi

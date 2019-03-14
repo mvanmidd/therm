@@ -61,3 +61,9 @@ will fallback to `fake-rpi`, which provides fake sensor inputs and GPIO outputs 
 the program, as well as dumping debug information to the console.
 
 
+### Shell
+
+Jupyter is included in test requirements, see 
+https://blog.sneawo.com/blog/2017/06/27/how-to-use-jupyter-notebooks-with-flask-app/
+for how to import your flask app into a jupyter notebook (and for some reason use docker if you want.)
+

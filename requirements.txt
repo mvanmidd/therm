@@ -2,5 +2,6 @@ flask
 flask-sqlalchemy
 psycopg2
 pandas
+scipy
 boto3
 Pillow
