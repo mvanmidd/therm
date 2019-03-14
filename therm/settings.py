@@ -40,7 +40,5 @@ class Development(Default):
 
 
 class Production(Default):
-    POLL_INTERVAL = 5
-    """Temp sensor polling interval in seconds."""
     ENV = "Production"
     DEBUG = False

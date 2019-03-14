@@ -67,3 +67,10 @@ Jupyter is included in test requirements, see
 https://blog.sneawo.com/blog/2017/06/27/how-to-use-jupyter-notebooks-with-flask-app/
 for how to import your flask app into a jupyter notebook (and for some reason use docker if you want.)
 
+
+### Autostart on raspi:
+add to `/etc/xdg/lxsession/LXDE-pi/autostart`:
+```bash
+@/bin/bash /home/pi/devel/therm/run_all.sh
+```
+
