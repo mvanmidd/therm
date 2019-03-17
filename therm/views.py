@@ -79,6 +79,11 @@ def _get_set_point():
         return "off"
 
 
+def _get_heat():
+    state = State.latest()
+    return "On" if state.heat_on else "Off"
+
+
 @root.route("/chart")
 def chart():
     """Get a chart of temp and set point
@@ -118,6 +123,7 @@ def chart():
         list(resampled_samples.data), list(resampled_samples.index), set_points=list(resampled_states.data)
     )
     temp_graph_params["set_point"] = _get_set_point()
+    temp_graph_params["heat"] = _get_heat()
     return render_template("chart.html", **temp_graph_params)
 
 

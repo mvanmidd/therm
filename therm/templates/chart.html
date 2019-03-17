@@ -4,7 +4,7 @@
 
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
-<h1>Temp: {{ '%0.2f'| format(inside_temp) }}   Set Point: {{ set_point }}</h1>
+<h1>Temp: {{ '%0.2f'| format(inside_temp) }}   Set Point: {{ set_point }} Heat: {{ heat }}</h1>
 <body>
 <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
 
