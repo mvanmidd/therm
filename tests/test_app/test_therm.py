@@ -45,6 +45,10 @@ def test_get_chart_default(client, fake_samples, fake_state):
     response = client.get("/chart")
     assert response.status_code == 200
 
+def test_get_dashboard_default(client, fake_samples, fake_state):
+    response = client.get("/dashboard")
+    assert response.status_code == 200
+
 
 def test_get_main(client):
     rv = client.get("/")

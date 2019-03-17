@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 
 import pandas as pd
 
@@ -9,6 +10,7 @@ from .mpl115 import read
 
 root = Blueprint("root", __name__, url_prefix="")
 
+# Maximum points to plot on the on-device (small) chart
 MAX_GRAPH_POINTS = 30
 
 
@@ -43,6 +45,12 @@ def interpolate(ts, datetime_index):
     x = pd.concat([ts, pd.Series(index=datetime_index)])
     return x.groupby(x.index).first().sort_index().fillna(method="ffill")[datetime_index]
 
+def datetimefilter(value, format="%I:%M %p"):
+    tz = pytz.timezone('US/Eastern') # timezone you want to convert to from UTC
+    utc = pytz.timezone('UTC')
+    value = utc.localize(value, is_dst=None).astimezone(pytz.utc)
+    local_dt = value.astimezone(tz)
+    return local_dt.strftime(format)
 
 def _plot_temps(temps, labels, set_points=None):
     """Generate template params for plotting the given temps
@@ -54,7 +62,7 @@ def _plot_temps(temps, labels, set_points=None):
 
     """
     set_points = set_points or []
-    labels = [s.strftime("%H:%M") for s in labels]
+    labels = [datetimefilter(s) for s in labels]
     temp_values_fmt = ["{:.2f}".format(s) for s in temps]
     set_points_fmt = ["{:.2f}".format(s) for s in set_points]
     current_app.logger.debug("\nLabels: {}\nValues: {}".format(", ".join(labels), ", ".join(temp_values_fmt)))
@@ -126,24 +134,6 @@ def chart():
     samples_ts, states_ts = _get_samples_states(hours=hours, num_points=n)
     resampled_samples, resampled_states = interpolate_samples_states(samples_ts, states_ts, max_points=MAX_GRAPH_POINTS)
 
-    # first = samples_ts.index.min()
-    # last = samples_ts.index.max()
-    # if first and last and not (pd.isnull(first) or pd.isnull(last)):
-    #     # Only do resampling if we have valid bounds. If no points were found, first and last will be NaN
-    #     secs = int((last - first).total_seconds() // (MAX_GRAPH_POINTS + 1))
-    #     periodsize = "{:d}S".format(secs)
-    #
-    #     resampled_samples = samples_ts.resample(periodsize, how="mean")
-    #     if any(resampled_samples.isnull()):
-    #         current_app.logger.info("interpolating samples")
-    #         resampled_samples = resampled_samples.interpolate("quadratic")
-    #     resampled_states = states_ts.resample(periodsize, how="mean")
-    #     if any(resampled_states.isnull()):
-    #         current_app.logger.info("interpolating states")
-    #         resampled_states = resampled_states.interpolate("quadratic")
-
-    # if resampled_states and resampled_samples:
-
     temp_graph_params = _plot_temps(
         list(resampled_samples.data), list(resampled_samples.index), set_points=list(resampled_states.data)
     )
@@ -175,9 +165,18 @@ def setpt_down():
 
 @root.route("/dashboard")
 def dashboard():
-    temp = _get_latest_temp()
-    set_pt = _get_set_point()
-    return render_template("dashboard.html", inside_temp=temp, set_point=set_pt)
+    n = int(request.args.get("n")) if request.args.get("n") else None
+    hours = float(request.args.get("hours")) if (request.args.get("hours") and not n) else 2
+    samples_ts, states_ts = _get_samples_states(hours=hours, num_points=n)
+    resampled_samples, resampled_states = interpolate_samples_states(samples_ts, states_ts, max_points=MAX_GRAPH_POINTS)
+
+    temp_graph_params = _plot_temps(
+        list(resampled_samples.data), list(resampled_samples.index), set_points=list(resampled_states.data)
+    )
+    temp_graph_params["inside_temp"] = _get_latest_temp()
+    temp_graph_params["set_point"] = _get_set_point()
+    temp_graph_params["heat"] = _get_heat()
+    return render_template("dashboard.html", **temp_graph_params)
 
 @root.route("/")
 def index():

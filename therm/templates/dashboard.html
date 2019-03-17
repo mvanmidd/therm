@@ -1,28 +1,31 @@
 <meta charset="utf-8">
+<html>
 <title>RaspiTherm</title>
 
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>   Set Point: <span id="set-pt-txt"> {{ set_point }}</span> Heat: <span id="heat-txt">{{ heat }}</span></h1>
+<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
 <body>
-<h2>
-    <button id="up">Up</button>
-    <button id="down">Down</button>
-    <button id="off">Off</button>
-    <!--<a href="#" class="tdown">Down</a>-->
-    <!--<a href="#" class="tup">Up</a>-->
-    <!--<a href="#" class="toff">Off</a>-->
-</h2>
+<h2>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span> </h2>
+<h2>Set Point: <span id="set-pt-txt"> {{ set_point }}</span></h2>
+<h2>Heat: <span id="heat-txt">{{ heat }}</span></h2>
+<button id="up">Up</button>
+<button id="down">Down</button>
+<button id="off">Off</button>
+<!--<canvas id="line-chart"></canvas>-->
+<!--<canvas id="line-chart" style="height: 400px; width: 100%; border:1px solid #000000;"></canvas>-->
 <canvas id="line-chart"></canvas>
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 
-</body>
 
 
 <script>
-    var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
+    var options = { hour: 'numeric', minute: '2-digit' };
+    var labels = [{% for item in labels %} "{{ item }}", {% endfor %}]
     var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
     var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
     var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
@@ -35,6 +38,7 @@
           datasets: [{
               data: temp_values,
               label: "Temperature",
+              backgroundColor: window.chartColors.green,
               borderColor: window.chartColors.green,
               fill: false
             },
@@ -45,13 +49,6 @@
 					borderColor: window.chartColors.blue,
 					borderDash: [5, 5],
 		    },
-            {label: 'Set point',
-            data: set_points_heaton,
-					fill: false,
-					backgroundColor: window.chartColors.red,
-					borderColor: window.chartColors.red,
-					borderDash: [5, 5],
-		    }
             ]
         },
         options: {
@@ -59,18 +56,16 @@
               display: false,
             },
             legend: {
-                display: false,
+                display: true,
             },
             animation: {
-                duration: 0
+                duration: 800
             },
             elements: {
                 point:{
                     radius: 0
                 }
             },
-            responsive: false,
-            maintainAspectRatio: false,
             tooltips: {enabled: false},
             hover: {mode: null},
             scales: {
@@ -88,3 +83,6 @@
         }
     });
 </script>
+
+</body>
+</html>

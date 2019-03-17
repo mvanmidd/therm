@@ -8,6 +8,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 DEFAULT_LOCATION = None
 
+db = SQLAlchemy()
+
 def interpolate_multiple(ts_list, max_points=50):
     """Interpolate multiple timeseries, using first element to select bounds
 
@@ -56,7 +58,7 @@ def interpolate_samples_states(samples_ts, states_ts, max_points=50):
         return Sample.timeseries([]), State.timeseries([])
 
 
-class Base(Model):
+class TimeSeriesBase(object):
     """Shared functionality for therm models."""
 
     DEFAULT_TIMESERIES = None
@@ -128,10 +130,9 @@ class Base(Model):
         attr_name = attr_name or cls.DEFAULT_TIMESERIES
         return pd.Series(data=[getattr(s, attr_name) for s in rows], index=pd.Index(data=[s.time for s in rows], dtype='datetime64[ns]'))
 
-db = SQLAlchemy(model_class=Base)
 
 
-class State(db.Model):
+class State(TimeSeriesBase, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     time = db.Column(db.DateTime, default=datetime.utcnow)
     set_point = db.Column(db.Float, nullable=False)
@@ -182,7 +183,7 @@ class State(db.Model):
         )
 
 
-class Sample(db.Model):
+class Sample(TimeSeriesBase, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     temp = db.Column(db.Float, nullable=False)
@@ -195,3 +196,20 @@ class Sample(db.Model):
         return "<Sample {} {}: Temp {} Pres {}>".format(
             self.time.strftime("%Y-%m-%d %H:%M"), self.location, self.temp, self.pressure
         )
+
+class Schedule(db.Model):
+    day_of_week = db.Column(db.String(20), primary_key=True)
+    time_of_day = db.Column(db.Time, primary_key=True)
+    set_point = db.Column(db.Float, nullable=True)
+
+    def next_scheduled(self, as_of=None):
+        """Return the next scheduled action.
+
+        Args:
+            as_of: Return next scheduled action as of a particular time. If omitted, use datetime.utcnow()
+
+        Returns:
+            Schedule: next scheduled action
+
+        """
+        raise NotImplementedError()
