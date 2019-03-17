@@ -8,6 +8,53 @@ from sqlalchemy.orm.exc import NoResultFound
 
 DEFAULT_LOCATION = None
 
+def interpolate_multiple(ts_list, max_points=50):
+    """Interpolate multiple timeseries, using first element to select bounds
+
+    Args:
+        ts_list: list of pd.TimeSeries objects to interpolate
+        max_points:
+
+    Returns:
+        list(pd.Timeseries): resampled timeserieses
+
+    """
+    primary = ts_list[0]
+    first = primary.index.min()
+    last = primary.index.max()
+    resampled_list = []
+    if first and last and not (pd.isnull(first) or pd.isnull(last)):
+        # Only do resampling if we have valid bounds. If no points were found, first and last will be NaN
+        secs = int((last - first).total_seconds() // (max_points + 1))
+        periodsize = "{:d}S".format(secs)
+
+        for timeseries in ts_list:
+            resampled = timeseries.resample(periodsize, how="mean")
+            if any(resampled.isnull()):
+                resampled = resampled.interpolate("quadratic")
+            resampled_list.append(resampled)
+        return resampled_list
+    else:
+        return [Sample.timeseries([]) for _ in resampled_list]
+
+def interpolate_samples_states(samples_ts, states_ts, max_points=50):
+    first = samples_ts.index.min()
+    last = samples_ts.index.max()
+    if first and last and not (pd.isnull(first) or pd.isnull(last)):
+        # Only do resampling if we have valid bounds. If no points were found, first and last will be NaN
+        secs = int((last - first).total_seconds() // (max_points + 1))
+        periodsize = "{:d}S".format(secs)
+
+        resampled_samples = samples_ts.resample(periodsize, how="mean")
+        if any(resampled_samples.isnull()):
+            resampled_samples = resampled_samples.interpolate("quadratic")
+        resampled_states = states_ts.resample(periodsize, how="mean")
+        if any(resampled_states.isnull()):
+            resampled_states = resampled_states.interpolate("quadratic")
+        return resampled_samples, resampled_states
+    else:
+        return Sample.timeseries([]), State.timeseries([])
+
 
 class Base(Model):
     """Shared functionality for therm models."""
@@ -80,24 +127,6 @@ class Base(Model):
         """
         attr_name = attr_name or cls.DEFAULT_TIMESERIES
         return pd.Series(data=[getattr(s, attr_name) for s in rows], index=pd.Index(data=[s.time for s in rows], dtype='datetime64[ns]'))
-    #
-    # @classmethod
-    # def timeseries(cls, limit=10, since=None, attr_name=None):
-    #     """Generature pandas timeseries of latest data.
-    #
-    #     Args:
-    #         limit: number of samples
-    #         since:  (not implemented)
-    #         attr_name: Attribute to generate timeseries for. default is cls.DEFAULT_TIMESERIES
-    #
-    #     Returns:
-    #
-    #
-    #     """
-    #     samples = cls.latest(limit=limit)
-    #     attr_name = attr_name or cls.DEFAULT_TIMESERIES
-    #     return pd.Series(data=[getattr(s, attr_name) for s in samples], index=[s.time for s in samples])
-    #
 
 db = SQLAlchemy(model_class=Base)
 

@@ -2,11 +2,35 @@ import pytest
 import itertools
 from datetime import datetime, timedelta
 import random
-from therm.models import db, Sample, State
+from therm.models import db, Sample, State, interpolate_multiple, interpolate_samples_states
 
 START_TIME = datetime.strptime("2018-06-01T00:00:00", "%Y-%m-%dT%H:%M:%S")
 END_TIME = START_TIME + timedelta(hours=10)
 
+
+@pytest.fixture
+def fake_states(app):
+    """590 minute time range, with states every 10min with +/-4min jitter"""
+    states_coarse = [
+        State(set_point=random.randrange(40, 80), time=START_TIME + timedelta(hours=i)) for i in range(10)
+    ]
+    states_fine = list(itertools.chain.from_iterable(
+        [
+            [
+                State(
+                    set_point=samp.set_point + random.random(),
+                    time=samp.time + timedelta(minutes=10 * i + random.randrange(-4, 4)),
+                )
+                for i in range(0, 6)
+            ]
+            for samp in states_coarse
+        ]
+    ))
+    with app.app_context():
+        for samp in states_fine:
+            db.session.add(samp)
+        db.session.commit()
+        yield states_fine
 
 @pytest.fixture
 def fake_samples(app):
@@ -38,7 +62,20 @@ def test_since(app, fake_samples):
     ts = Sample.timeseries(latest)
     assert len(ts.data) == 1
 
-def test_latest(app, fake_samples):
+
+def test_resample_samples_states(app, fake_samples, fake_states):
+    samples_ts = Sample.timeseries(fake_samples)
+    states_ts = State.timeseries(fake_states)
+    res_samples, res_states = interpolate_samples_states(samples_ts, states_ts, max_points=50)
+    assert 40 < len(res_samples) < 55
+    assert 40 < len(res_states) < 55
+
+    # assert interpolate_multiple yields same results as interpolate_samples_states
+    resampled_list = interpolate_multiple([samples_ts, states_ts], max_points=50)
+    assert all(res_samples == resampled_list[0])
+    assert all(res_states == resampled_list[1])
+
+def test_resample(app, fake_samples):
     latest = Sample.latest(limit=10)
     assert len(latest) == 10
     ts = Sample.timeseries(latest)
