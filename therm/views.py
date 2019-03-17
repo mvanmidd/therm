@@ -140,6 +140,32 @@ def chart():
     temp_graph_params["heat"] = _get_heat()
     return render_template("chart.html", **temp_graph_params)
 
+@root.route('/setpt-up', methods=['POST'])
+def setpt_up():
+    latest = State.latest()
+    State.update_state('set_point_enabled', True)
+    State.update_state('set_point', latest.set_point + .5)
+    return jsonify(State.latest()._asdict()), 200
+
+@root.route('/setpt-off', methods=['POST'])
+def setpt_off():
+    latest = State.latest()
+    State.update_state('set_point_enabled', False)
+    return jsonify(State.latest()._asdict()), 200
+
+@root.route('/setpt-down', methods=['POST'])
+def setpt_down():
+    latest = State.latest()
+    State.update_state('set_point_enabled', True)
+    State.update_state('set_point', latest.set_point - .5)
+    return jsonify(State.latest()._asdict()), 200
+
+
+@root.route("/dashboard")
+def dashboard():
+    temp = _get_latest_temp()
+    set_pt = _get_set_point()
+    return render_template("dashboard.html", inside_temp=temp, set_point=set_pt)
 
 @root.route("/")
 def index():

@@ -1,0 +1,90 @@
+<meta charset="utf-8">
+<title>RaspiTherm</title>
+
+<script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='utils.js') }}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>   Set Point: <span id="set-pt-txt"> {{ set_point }}</span> Heat: <span id="heat-txt">{{ heat }}</span></h1>
+<body>
+<h2>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <button id="off">Off</button>
+    <!--<a href="#" class="tdown">Down</a>-->
+    <!--<a href="#" class="tup">Up</a>-->
+    <!--<a href="#" class="toff">Off</a>-->
+</h2>
+<canvas id="line-chart"></canvas>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+
+
+<script>
+    var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
+    var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
+    var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
+    var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
+
+    chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
+        type: 'line',
+
+        data: {
+          labels: labels,
+          datasets: [{
+              data: temp_values,
+              label: "Temperature",
+              borderColor: window.chartColors.green,
+              fill: false
+            },
+            {label: 'Set point',
+            data: set_points_heatoff,
+					fill: false,
+					backgroundColor: window.chartColors.blue,
+					borderColor: window.chartColors.blue,
+					borderDash: [5, 5],
+		    },
+            {label: 'Set point',
+            data: set_points_heaton,
+					fill: false,
+					backgroundColor: window.chartColors.red,
+					borderColor: window.chartColors.red,
+					borderDash: [5, 5],
+		    }
+            ]
+        },
+        options: {
+            title: {
+              display: false,
+            },
+            legend: {
+                display: false,
+            },
+            animation: {
+                duration: 0
+            },
+            elements: {
+                point:{
+                    radius: 0
+                }
+            },
+            responsive: false,
+            maintainAspectRatio: false,
+            tooltips: {enabled: false},
+            hover: {mode: null},
+            scales: {
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                        suggestedMin: {{ y_min }},
+                        suggestedMax: {{ y_max }},
+                    }
+                }],
+                xAxes: [{
+                    display: true,
+                }]
+            }
+        }
+    });
+</script>
