@@ -16,6 +16,11 @@ class Default(object):
     HEARTBEAT_ALARM_NAME = "therm-heartbeat-stopped"
     ALARM_PERIOD = 600
 
+    PIN_TEMP_ON_OFF = None
+    PIN_TEMP_DOWN = None
+    PIN_TEMP_UP = None
+    PIN_TEMP_HOLD = None
+
     def __init__(self):
         self.SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:5432/{}".format(
             self.DB_UNAME, self.DB_PASS, self.DB_URL, self.DB_NAME

@@ -12,10 +12,31 @@ sudo apt-get install libblas-dev libatlas-base-dev
 
 ```
 
+This project uses python 3. It's recommended that you use virtualenvwrapper.
+On raspbian, do:
+```bash
+sudo pip3 install virtualenv virtualenvwrapper
+```
+
+Add the following to ~/.bash_profile:
+```bash
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+source /usr/local/bin/virtualenvwrapper.sh
+```
+
+Then:
+```bash
+mkvirtualenv therm
+workon therm
+
+```
 Then install python requirements:
 ```bash
 pip install -r requirements.txt
 ```
+This will probably take a while (30-45min on a RasPi zero); some of the requirements do
+not have wheels available for raspi, and therefore will be built from source.
 
 To run the tests:
 ```bash
@@ -36,6 +57,11 @@ export THERM_DB_URL=thermdb.cln2j9a8fio32eu.us-east-1.rds.amazonaws.com
 export THERM_DB_UNAME=thermuser
 export THERM_DB_PASS=correct-horse-battery-staple
 ```
+
+
+#### Per-device hardware config
+
+
 
 ### Run
 
