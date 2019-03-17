@@ -14,10 +14,12 @@ except ImportError:
 
 
 
-HEAT_GPIO = 4  # GPIO 4, Physical pin 7 on raspi. LOW turns relay on.
+HEAT_GPIO = None
 
 
-def init():
+def init(heat_gpio):
+    global HEAT_GPIO
+    HEAT_GPIO = heat_gpio
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(HEAT_GPIO, GPIO.OUT)
 

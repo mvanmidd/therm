@@ -13,7 +13,8 @@
 <script>
     var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
     var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
-    var set_points = [{% for item in set_points %} "{{item}}", {% endfor %}]
+    var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
+    var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
 
     chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
         type: 'line',
@@ -23,14 +24,21 @@
           datasets: [{
               data: temp_values,
               label: "Temperature",
-              borderColor: "#3e95cd",
+              borderColor: window.chartColors.green,
               fill: false
             },
             {label: 'Set point',
-            data: set_points,
+            data: set_points_heatoff,
 					fill: false,
-					backgroundColor: window.chartColors.green,
-					borderColor: window.chartColors.green,
+					backgroundColor: window.chartColors.blue,
+					borderColor: window.chartColors.blue,
+					borderDash: [5, 5],
+		    },
+            {label: 'Set point',
+            data: set_points_heaton,
+					fill: false,
+					backgroundColor: window.chartColors.red,
+					borderColor: window.chartColors.red,
 					borderDash: [5, 5],
 		    }
             ]

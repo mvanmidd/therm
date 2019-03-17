@@ -2,4 +2,5 @@ pytest
 pytest-mock
 flask-shell-ipython
 jupyter
+ipdb
 fake-rpi

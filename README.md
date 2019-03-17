@@ -2,13 +2,19 @@
 
 Arduino thermostat.
 
-### Install
+### To Do
 
-These are mocked using `fake-rpi` if they can't be imported.
+* Proper multi-zone filtering
+* Scheduled control
+* Schedule editing in app
+* Schedule editing from device
+* Color chart by whether heat was on/off
+
+### Install
 
 On the raspi you'll need `libblas` before installing scipy:
 ```bash
-sudo apt-get install libblas-dev libatlas-base-dev
+sudo apt-get install libblas-dev libatlas-base-dev rpi.gpio
 
 ```
 
@@ -33,12 +39,12 @@ workon therm
 ```
 Then install python requirements:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-device.txt
 ```
-This will probably take a while (30-45min on a RasPi zero); some of the requirements do
+This will probably take a while (1-2hr on a RasPi zero); some of the requirements do
 not have wheels available for raspi, and therefore will be built from source.
 
-To run the tests:
+To run the tests (requires python 3.6, specifically for `assert_called_once`):
 ```bash
 pip install -r requirements-test.txt
 pytest

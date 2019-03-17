@@ -19,8 +19,8 @@ from RPi import GPIO
 
 
 
-def init():
-    for pin in (current_app.config['PIN_TEMP_DOWN'], current_app.config['PIN_TEMP_UP'], current_app.config['PIN_TEMP_ON_OFF']):
+def init(app):
+    for pin in (app.config['PIN_TEMP_DOWN'], app.config['PIN_TEMP_UP'], app.config['PIN_TEMP_ON_OFF']):
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 

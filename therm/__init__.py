@@ -57,8 +57,13 @@ def create_app(config_env=None):
 
     app.register_blueprint(_views.root)
 
-    from .cli import init_app
+    from .cli import init_app as cli_init
 
-    init_app(app)
+    cli_init(app)
+
+    # Temp sensor control moved to cli.py
+    # from .mpl115 import init_app as mpl_init
+    # mpl_init(app)
+
 
     return app

@@ -17,8 +17,9 @@ from .models import Sample, db, State
 
 POLL_LOCKFILE = "/tmp/polling"
 """Lock file for polling process."""
-TEMP_WINDOW = 1
-"""Only adjust thermostat when temp is outside range of target +/- TEMP_WINDOW."""
+TEMP_WINDOW_UP = 1
+TEMP_WINDOW_DOWN = 2.5
+"""Only adjust thermostat when temp is outside range of target + TMEP_WINDOW_UP, target - TEMP_WINDOW_DOWN"""
 TEMP_INCREMENT = 0.5
 """Increment for up/down buttons."""
 
@@ -28,10 +29,11 @@ loop = asyncio.get_event_loop()
 def _poll_once(to_sqs=False):
     """The main poll / update loop to run on raspberry pi."""
     # Poll sensor
-    temp, pressure = mpl115.read()
-    sample = Sample(temp=temp, pressure=pressure)
-    db.session.add(sample)
-    db.session.commit()
+    if current_app.config['TEMP_SENSOR_ENABLED']:
+        temp, pressure = mpl115.read()
+        sample = Sample(temp=temp, pressure=pressure)
+        db.session.add(sample)
+        db.session.commit()
 
     if to_sqs:
         sqs_client = boto3.client("sqs")
@@ -45,19 +47,20 @@ def _poll_once(to_sqs=False):
         click.echo(dumps(response))
 
     # React to desired state
-    latest_state = State.latest()
-    if not latest_state:
-        click.echo("Not performing thermostat control; no target found")
-        return
+    if current_app.config['RELAY_ENABLED']:
+        latest_state = State.latest()
+        if not latest_state:
+            click.echo("Not performing thermostat control; no target found")
+            return
 
-    click.echo("Target {}; temp {}".format(latest_state.set_point, temp))
-    if latest_state.set_point_enabled:
-        if latest_state.set_point > (temp + TEMP_WINDOW) and State.update_state("heat_on", True):
-            click.echo("Target {}; temp {}: THERM ON".format(latest_state.set_point, temp))
-            relay.on()
-        elif latest_state.set_point < (temp - TEMP_WINDOW) and State.update_state("heat_on", False):
-            click.echo("Target {}; temp {}: THERM OFF".format(latest_state.set_point, temp))
-            relay.off()
+        click.echo("Target {}; temp {}".format(latest_state.set_point, temp))
+        if latest_state.set_point_enabled:
+            if latest_state.set_point > (temp + TEMP_WINDOW_UP) and State.update_state("heat_on", True):
+                click.echo("Target {}; temp {}: THERM ON".format(latest_state.set_point, temp))
+                relay.on()
+            elif latest_state.set_point < (temp - TEMP_WINDOW_DOWN) and State.update_state("heat_on", False):
+                click.echo("Target {}; temp {}: THERM OFF".format(latest_state.set_point, temp))
+                relay.off()
 
 
 async def _poll_forever(to_sqs=False):
@@ -101,24 +104,29 @@ def _register_buttons():
 
 def _validate_state():
     """Ensure that current relay state matches current DB state."""
-    latest = State.latest()
-    relay_state = relay.is_on()
-    if latest.heat_on != relay_state:
-        click.echo(
-            "Warning: DB state (heat_on = {} as of {}) does not match relay state is_on={}. Updating DB.".format(
-                latest.heat_on, latest.time.isoformat(), relay_state
+    if current_app.config['RELAY_ENABLED']:
+        latest = State.latest()
+        relay_state = relay.is_on()
+        if latest.heat_on != relay_state:
+            click.echo(
+                "Warning: DB state (heat_on = {} as of {}) does not match relay state is_on={}. Updating DB.".format(
+                    latest.heat_on, latest.time.isoformat(), relay_state
+                )
             )
-        )
-        State.update_state("heat_on", relay_state)
-    else:
-        State.refresh()
+            State.update_state("heat_on", relay_state)
+        else:
+            State.refresh()
 
 
 def _setup():
 
-    relay.init()
-    buttons.init()
-    _register_buttons()
+    if current_app.config['RELAY_ENABLED']:
+        relay.init(heat_gpio=current_app.config['RELAY_GPIO'])
+    if current_app.config['BUTTONS_ENABLED']:
+        buttons.init(current_app)
+        _register_buttons()
+    if current_app.config['TEMP_SENSOR_ENABLED']:
+        mpl115.init_app(current_app)
 
 
 @click.command("poll")
