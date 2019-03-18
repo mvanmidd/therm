@@ -112,8 +112,27 @@ for how to import your flask app into a jupyter notebook (and for some reason us
 
 
 ### Autostart on raspi:
-add to `/etc/xdg/lxsession/LXDE-pi/autostart`:
+
+I currently have two devices: a raspi Zero without a screen running the relay and temp sensor,
+and a raspi B+ with a 2.2" screen running the web UI and buttons
+
+
+To run the web UI on startup on the b+, add to `/etc/xdg/lxsession/LXDE-pi/autostart`:
+```bash
+@/bin/bash /home/pi/devel/therm/run_kiosk.sh
+```
+
+To run relay and sensor on the zero, add to `/etc/rc.local`:
+```bash
+su pi /home/pi/devel/therm/run_temp.sh
+```
+
+In this setup, there are no buttons (pi B TFT hat has buttons, but they run in poll loop,
+so not enabled in this mode.)
+
+To run everything on a single device, add to `/etc/xdg/lxsession/LXDE-pi/autostart`:
 ```bash
 @/bin/bash /home/pi/devel/therm/run_all.sh
 ```
+
 
