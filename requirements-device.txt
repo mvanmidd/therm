@@ -1,2 +1,4 @@
 # Requirements for OLED
 Adafruit-SSD1306
+RPi.GPIO
+smbus

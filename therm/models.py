@@ -33,13 +33,15 @@ def interpolate_multiple(ts_list, max_points=50):
         for timeseries in ts_list:
             resampled = timeseries.resample(periodsize, how="mean")
             if any(resampled.isnull()):
-                resampled = resampled.interpolate("quadratic")
+                if sum(resampled.notnull()) > 4:
+                    resampled = resampled.interpolate("quadratic")
             resampled_list.append(resampled)
         return resampled_list
     else:
         return [Sample.timeseries([]) for _ in resampled_list]
 
 def interpolate_samples_states(samples_ts, states_ts, max_points=50):
+    resamp_list = interpolate_multiple([samples_ts, states_ts], max_points=max_points)
     first = samples_ts.index.min()
     last = samples_ts.index.max()
     if first and last and not (pd.isnull(first) or pd.isnull(last)):
@@ -48,10 +50,10 @@ def interpolate_samples_states(samples_ts, states_ts, max_points=50):
         periodsize = "{:d}S".format(secs)
 
         resampled_samples = samples_ts.resample(periodsize, how="mean")
-        if any(resampled_samples.isnull()):
+        if any(resampled_samples.isnull()) and sum(resampled_samples.notnull()) > 2:
             resampled_samples = resampled_samples.interpolate("quadratic")
         resampled_states = states_ts.resample(periodsize, how="mean")
-        if any(resampled_states.isnull()):
+        if any(resampled_states.isnull()) and sum(resampled_states.notnull()) > 2:
             resampled_states = resampled_states.interpolate("quadratic")
         return resampled_samples, resampled_states
     else:

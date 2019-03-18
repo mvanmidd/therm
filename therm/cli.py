@@ -32,6 +32,7 @@ def _poll_once(to_sqs=False):
     if current_app.config['TEMP_SENSOR_ENABLED']:
         temp, pressure = mpl115.read()
         sample = Sample(temp=temp, pressure=pressure)
+        click.echo("Temp {}".format(temp))
         db.session.add(sample)
         db.session.commit()
 
@@ -53,6 +54,7 @@ def _poll_once(to_sqs=False):
             click.echo("Not performing thermostat control; no target found")
             return
 
+        temp = Sample.latest().temp
         click.echo("Target {}; temp {}".format(latest_state.set_point, temp))
         if latest_state.set_point_enabled:
             if latest_state.set_point > (temp + TEMP_WINDOW_UP) and State.update_state("heat_on", True):
@@ -160,8 +162,9 @@ def poll_temp_sensor(force, reset, to_sqs):
         click.echo("Resetting state.")
         if State.update_state("set_point_enabled", False):
             click.echo("Disabling set point")
-        relay.off()
-        State.update_state("heat_on", False)
+        if current_app.config['RELAY_ENABLED']:
+            relay.off()
+            State.update_state("heat_on", False)
     task = loop.create_task(_poll_forever(to_sqs))
 
     try:

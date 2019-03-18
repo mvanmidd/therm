@@ -63,6 +63,15 @@ def test_since(app, fake_samples):
     assert len(ts.data) == 1
 
 
+def test_resample_not_enough_data(app, fake_samples, fake_states):
+    samples_ts = Sample.timeseries(fake_samples[-10:])
+    states_ts = State.timeseries(fake_states[-2:])
+    res_samples, res_states = interpolate_samples_states(samples_ts, states_ts, max_points=10)
+    assert 8 < len(samples_ts) < 12
+    # There is not enough data to make a reasonable interpolation for states, so we mostly care that this
+    # didn't crash and returned something
+    assert states_ts is not None
+
 def test_resample_samples_states(app, fake_samples, fake_states):
     samples_ts = Sample.timeseries(fake_samples)
     states_ts = State.timeseries(fake_states)

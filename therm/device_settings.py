@@ -54,7 +54,14 @@ class Zero(DeviceSettingsBase):
     PIN_TEMP_HOLD = 27
 
 
-    TEMP_SENSOR_ENABLED = False
+    TEMP_SENSOR_ENABLED = True
+    TEMP_SENSOR_ADDR = 0x60
+    TEMP_SENSOR_BUS_ID = 1
+    TEMP_CALIB_F = 3.0
+    """Adjustment to temp sensor, in degrees Farenheit"""
 
-    OLED_ENABLED = True
+    OLED_ENABLED = False
     SSD1306_I2C_ADDRESS = 0x3C
+
+    RELAY_ENABLED = True
+    RELAY_GPIO = 4  # GPIO 4, Physical pin 7 on raspi. LOW turns relay on.

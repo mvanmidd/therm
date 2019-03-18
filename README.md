@@ -64,6 +64,8 @@ export THERM_DB_UNAME=thermuser
 export THERM_DB_PASS=correct-horse-battery-staple
 ```
 
+If you want to send status messages to SQS using `flask poll --to-sqs`, you'll
+need to [configure boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html).
 
 #### Per-device hardware config
 
