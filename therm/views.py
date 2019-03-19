@@ -60,8 +60,8 @@ def _plot_temps_states(temps, states):
     """
     temp_values = [t if not np.isnan(t) else None for t in temps.temp] if len(temps) > 0 else list()
     on_sets = states.apply(
-            lambda state: state.set_point if state.set_point_enabled and state.heat_on else np.nan, axis=1
-        )
+        lambda state: state.set_point if state.set_point_enabled and state.heat_on else np.nan, axis=1
+    )
     on_sets = np.where(np.isnan(on_sets), None, on_sets)
     off_sets = list(
         states.apply(

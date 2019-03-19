@@ -5,6 +5,7 @@ This is mostly useful for hardware settings: GPIO pins, screens, sensors, etc.
 These classes will be imported into settings.py based on the THERM_DEVICE environment variable.
 """
 
+
 class DeviceSettingsBase(object):
     BUTTONS_ENABLED = False
     PIN_TEMP_ON_OFF = None
@@ -23,6 +24,7 @@ class DeviceSettingsBase(object):
     RELAY_ENABLED = False
     RELAY_GPIO = 0
 
+
 class Primary(DeviceSettingsBase):
     """Full size pi 2 B+ with 2.2" TFT hat, temp sensor, and relay control."""
 
@@ -31,7 +33,6 @@ class Primary(DeviceSettingsBase):
     PIN_TEMP_DOWN = 22
     PIN_TEMP_UP = 23
     PIN_TEMP_HOLD = 27
-
 
     TEMP_SENSOR_ENABLED = True
     TEMP_SENSOR_ADDR = 0x60
@@ -44,6 +45,7 @@ class Primary(DeviceSettingsBase):
     RELAY_ENABLED = True
     RELAY_GPIO = 4  # GPIO 4, Physical pin 7 on raspi. LOW turns relay on.
 
+
 class Zero(DeviceSettingsBase):
     """Pi Zero with OLED screen"""
 
@@ -52,7 +54,6 @@ class Zero(DeviceSettingsBase):
     PIN_TEMP_DOWN = 22
     PIN_TEMP_UP = 23
     PIN_TEMP_HOLD = 27
-
 
     TEMP_SENSOR_ENABLED = True
     TEMP_SENSOR_ADDR = 0x60

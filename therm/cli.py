@@ -29,7 +29,7 @@ loop = asyncio.get_event_loop()
 def _poll_once(to_sqs=False):
     """The main poll / update loop to run on raspberry pi."""
     # Poll sensor
-    if current_app.config['TEMP_SENSOR_ENABLED']:
+    if current_app.config["TEMP_SENSOR_ENABLED"]:
         temp, pressure = mpl115.read()
         sample = Sample(temp=temp, pressure=pressure)
         click.echo("Temp {}".format(temp))
@@ -48,7 +48,7 @@ def _poll_once(to_sqs=False):
         click.echo(dumps(response))
 
     # React to desired state
-    if current_app.config['RELAY_ENABLED']:
+    if current_app.config["RELAY_ENABLED"]:
         latest_state = State.latest()
         if not latest_state:
             click.echo("Not performing thermostat control; no target found")
@@ -106,7 +106,7 @@ def _register_buttons():
 
 def _validate_state():
     """Ensure that current relay state matches current DB state."""
-    if current_app.config['RELAY_ENABLED']:
+    if current_app.config["RELAY_ENABLED"]:
         latest = State.latest()
         relay_state = relay.is_on()
         if latest.heat_on != relay_state:
@@ -122,12 +122,12 @@ def _validate_state():
 
 def _setup():
 
-    if current_app.config['RELAY_ENABLED']:
-        relay.init(heat_gpio=current_app.config['RELAY_GPIO'])
-    if current_app.config['BUTTONS_ENABLED']:
+    if current_app.config["RELAY_ENABLED"]:
+        relay.init(heat_gpio=current_app.config["RELAY_GPIO"])
+    if current_app.config["BUTTONS_ENABLED"]:
         buttons.init(current_app)
         _register_buttons()
-    if current_app.config['TEMP_SENSOR_ENABLED']:
+    if current_app.config["TEMP_SENSOR_ENABLED"]:
         mpl115.init_app(current_app)
 
 
@@ -162,7 +162,7 @@ def poll_temp_sensor(force, reset, to_sqs):
         click.echo("Resetting state.")
         if State.update_state("set_point_enabled", False):
             click.echo("Disabling set point")
-        if current_app.config['RELAY_ENABLED']:
+        if current_app.config["RELAY_ENABLED"]:
             relay.off()
             State.update_state("heat_on", False)
     task = loop.create_task(_poll_forever(to_sqs))
@@ -267,12 +267,14 @@ def create_sqs_no_messages_alarm():
         ComparisonOperator="LessThanOrEqualToThreshold",
     )
 
+
 @click.command("unset")
 @with_appcontext
 def unset_hold():
     """Unset set point."""
-    State.update_state('set_point_enabled', False)
+    State.update_state("set_point_enabled", False)
     click.echo(State.latest())
+
 
 @click.command("set")
 @with_appcontext
@@ -284,16 +286,16 @@ def set_hold(temp):
         temp (int): New temp
 
     """
-    State.update_state('set_point', temp)
-    State.update_state('set_point_enabled', True)
+    State.update_state("set_point", temp)
+    State.update_state("set_point_enabled", True)
     click.echo(State.latest())
+
 
 @click.command("state")
 @with_appcontext
 def state():
     """Print state."""
     click.echo(State.latest())
-
 
 
 @click.command("create-alarms")

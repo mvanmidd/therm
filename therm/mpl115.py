@@ -11,6 +11,7 @@ import smbus
 _ADDR = None
 _BUS = None
 
+
 def _ctof(c):
     return c * (9.0 / 5.0) + 32
 
@@ -87,11 +88,12 @@ def read(debug=False):
     temp += _TEMP_CALIB_F
     return temp, humidity
 
+
 def init_app(app):
     global _BUS_ID, _BUS, _ADDR, _TEMP_CALIB_F
-    _BUS_ID = app.config['TEMP_SENSOR_BUS_ID']
-    _ADDR = app.config['TEMP_SENSOR_ADDR']
-    _TEMP_CALIB_F = app.config['TEMP_CALIB_F']
+    _BUS_ID = app.config["TEMP_SENSOR_BUS_ID"]
+    _ADDR = app.config["TEMP_SENSOR_ADDR"]
+    _TEMP_CALIB_F = app.config["TEMP_CALIB_F"]
     _BUS = smbus.SMBus(_BUS_ID)
 
 

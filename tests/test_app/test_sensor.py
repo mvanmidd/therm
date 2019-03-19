@@ -2,6 +2,7 @@ import pytest
 
 from therm import mpl115
 
+
 def test_read(app):
     mpl115.init_app(app)
     temp, humidity = mpl115.read()

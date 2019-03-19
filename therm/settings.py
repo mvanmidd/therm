@@ -30,8 +30,10 @@ class Default(object):
         device_type = os.environ.get("THERM_DEVICE")
         if device_type:
             print("Using settings for device '{}'".format(device_type))
+
             def props(cls):
-                return [i for i in cls.__dict__.keys() if i[:1] != '_']
+                return [i for i in cls.__dict__.keys() if i[:1] != "_"]
+
             setting_names = props(device_settings.DeviceSettingsBase)
             this_device = getattr(device_settings, device_type)
             for param in setting_names:
@@ -52,7 +54,6 @@ class Test(Default, device_settings.DeviceSettingsBase):
     PIN_TEMP_DOWN = 22
     PIN_TEMP_UP = 23
     PIN_TEMP_HOLD = 27
-
 
     TEMP_SENSOR_ENABLED = True
     TEMP_SENSOR_ADDR = 0x60

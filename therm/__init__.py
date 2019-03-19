@@ -54,7 +54,7 @@ def create_app(config_env=None):
             return value
         return json.dumps(value)
 
-    app.jinja_env.filters['json'] = jsonfilter
+    app.jinja_env.filters["json"] = jsonfilter
 
     app.logger.warning("Loaded app with settings: {}".format(env))
 
@@ -73,6 +73,5 @@ def create_app(config_env=None):
     # Temp sensor control moved to cli.py
     # from .mpl115 import init_app as mpl_init
     # mpl_init(app)
-
 
     return app

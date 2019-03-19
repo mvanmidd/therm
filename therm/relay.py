@@ -13,7 +13,6 @@ except ImportError:
     from RPi import GPIO
 
 
-
 HEAT_GPIO = None
 
 
@@ -34,6 +33,7 @@ def off():
 
 def is_on():
     return not GPIO.input(HEAT_GPIO)
+
 
 def flip():
     """Flip the heater state and return new state."""

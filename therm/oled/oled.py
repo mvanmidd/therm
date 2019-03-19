@@ -1,4 +1,3 @@
-
 from collections import namedtuple
 import time
 
@@ -133,6 +132,7 @@ def display(temp, setpt):
     """
     im = _draw_status32(temp, setpt)
     _display(im)
+
 
 if __name__ == "__main__":
     display("72.3", "off")
