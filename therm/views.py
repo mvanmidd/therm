@@ -2,16 +2,16 @@ from datetime import datetime, timedelta
 import pytz
 
 import pandas as pd
+import numpy as np
 
 from flask import current_app, Blueprint, render_template, jsonify, request
 
-from .models import db, Sample, State, interpolate_samples_states
-from .mpl115 import read
+from .models import db, Sample, State, jointerpolate
 
 root = Blueprint("root", __name__, url_prefix="")
 
 # Maximum points to plot on the on-device (small) chart
-MAX_GRAPH_POINTS = 30
+MAX_GRAPH_POINTS = 60
 
 
 @root.route("/samples/latest")
@@ -41,18 +41,15 @@ def states():
     return jsonify([r._asdict() for r in res])
 
 
-def interpolate(ts, datetime_index):
-    x = pd.concat([ts, pd.Series(index=datetime_index)])
-    return x.groupby(x.index).first().sort_index().fillna(method="ffill")[datetime_index]
-
 def datetimefilter(value, format="%I:%M %p"):
-    tz = pytz.timezone('US/Eastern') # timezone you want to convert to from UTC
-    utc = pytz.timezone('UTC')
+    tz = pytz.timezone("US/Eastern")  # timezone you want to convert to from UTC
+    utc = pytz.timezone("UTC")
     value = utc.localize(value, is_dst=None).astimezone(pytz.utc)
     local_dt = value.astimezone(tz)
     return local_dt.strftime(format)
 
-def _plot_temps(temps, labels, set_points=None):
+
+def _plot_temps_states(temps, states):
     """Generate template params for plotting the given temps
 
     Args:
@@ -61,18 +58,30 @@ def _plot_temps(temps, labels, set_points=None):
         dict: params for template
 
     """
-    set_points = set_points or []
-    labels = [datetimefilter(s) for s in labels]
-    temp_values_fmt = ["{:.2f}".format(s) for s in temps]
-    set_points_fmt = ["{:.2f}".format(s) for s in set_points]
-    current_app.logger.debug("\nLabels: {}\nValues: {}".format(", ".join(labels), ", ".join(temp_values_fmt)))
-    ymin = min([s for s in temps + set_points]) - 1 if temps + set_points else 0
-    ymax = max([s for s in temps + set_points]) + 1 if temps + set_points else 100
+    temp_values = [t if not np.isnan(t) else None for t in temps.temp] if len(temps) > 0 else list()
+    on_sets = states.apply(
+            lambda state: state.set_point if state.set_point_enabled and state.heat_on else np.nan, axis=1
+        )
+    on_sets = np.where(np.isnan(on_sets), None, on_sets)
+    off_sets = list(
+        states.apply(
+            lambda state: state.set_point if state.set_point_enabled and not state.heat_on else np.nan, axis=1
+        )
+    )
+    off_sets = np.where(np.isnan(off_sets), None, off_sets)
+    if len(temp_values) > 0:
+        labels = [datetimefilter(s) for s in temps.index]
+    else:
+        labels = []
+    # current_app.logger.debug("\nLabels: {}\nValues: {}".format(", ".join(labels), ", ".join(temp_values_fmt)))
+    ymin = np.min(temps.temp) - 4 if len(temps) > 1 else 0
+    ymax = np.max(temps.temp) + 4 if len(temps) > 1 else 100
+    # ymax = max([s for s in temp_values + on_sets + [100]]) + 1
     return {
         "labels": labels,
-        "temp_values": temp_values_fmt,
-        "set_points_heaton": set_points_fmt,
-        "set_points_heatoff": set_points_fmt,
+        "temp_values": temp_values,
+        "set_points_heaton": on_sets,
+        "set_points_heatoff": off_sets,
         "y_min": ymin,
         "y_max": ymax,
     }
@@ -99,28 +108,6 @@ def _get_heat():
     return "On" if state.heat_on else "Off"
 
 
-def _get_samples_states(hours = None, num_points = None):
-    """
-
-    Args:
-        hours (optional[int])
-        num_points (optional[int]):
-
-    Returns:
-        tuple(pd.Timeseries(Sample), pd.TimeSeries(State)): samples, states
-
-    """
-    if not hours and not num_points:
-        return [], []
-    if hours:
-        samples_ts = Sample.timeseries(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
-        states_ts = State.timeseries(State.since(datetime.utcnow() - timedelta(hours=hours)))
-    elif num_points:
-        n = max(num_points, 5)
-        samples_ts = Sample.timeseries(Sample.latest(limit=n))
-        states_ts = State.timeseries(State.latest(limit=n))
-    return samples_ts, states_ts
-
 @root.route("/chart")
 def chart():
     """Get a chart of temp and set point
@@ -129,54 +116,53 @@ def chart():
         n: latest n samples
         hours: latest `hours` hours, default 12
     """
-    n = int(request.args.get("n")) if request.args.get("n") else None
-    hours = float(request.args.get("hours")) if (request.args.get("hours") and not n) else 12
-    samples_ts, states_ts = _get_samples_states(hours=hours, num_points=n)
-    resampled_samples, resampled_states = interpolate_samples_states(samples_ts, states_ts, max_points=MAX_GRAPH_POINTS)
-
-    temp_graph_params = _plot_temps(
-        list(resampled_samples.data), list(resampled_samples.index), set_points=list(resampled_states.data)
-    )
+    hours = float(request.args.get("hours")) if request.args.get("hours") else 12
+    samples_df = Sample.dataframe(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
+    states_df = State.dataframe(State.since(datetime.utcnow() - timedelta(hours=hours)))
+    resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
+    temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
     temp_graph_params["inside_temp"] = _get_latest_temp()
     temp_graph_params["set_point"] = _get_set_point()
     temp_graph_params["heat"] = _get_heat()
     return render_template("chart.html", **temp_graph_params)
 
-@root.route('/setpt-up', methods=['POST'])
+
+@root.route("/setpt-up", methods=["POST"])
 def setpt_up():
     latest = State.latest()
-    State.update_state('set_point_enabled', True)
-    State.update_state('set_point', latest.set_point + .5)
+    State.update_state("set_point_enabled", True)
+    State.update_state("set_point", latest.set_point + 0.5)
     return jsonify(State.latest()._asdict()), 200
 
-@root.route('/setpt-off', methods=['POST'])
+
+@root.route("/setpt-off", methods=["POST"])
 def setpt_off():
     latest = State.latest()
-    State.update_state('set_point_enabled', False)
+    State.update_state("set_point_enabled", False)
     return jsonify(State.latest()._asdict()), 200
 
-@root.route('/setpt-down', methods=['POST'])
+
+@root.route("/setpt-down", methods=["POST"])
 def setpt_down():
     latest = State.latest()
-    State.update_state('set_point_enabled', True)
-    State.update_state('set_point', latest.set_point - .5)
+    State.update_state("set_point_enabled", True)
+    State.update_state("set_point", latest.set_point - 0.5)
     return jsonify(State.latest()._asdict()), 200
 
 
 @root.route("/dashboard")
 def dashboard():
-    n = int(request.args.get("n")) if request.args.get("n") else None
-    hours = float(request.args.get("hours")) if (request.args.get("hours") and not n) else 2
-    samples_ts, states_ts = _get_samples_states(hours=hours, num_points=n)
-    resampled_samples, resampled_states = interpolate_samples_states(samples_ts, states_ts, max_points=MAX_GRAPH_POINTS)
+    hours = float(request.args.get("hours")) if request.args.get("hours") else 12
+    samples_df = Sample.dataframe(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
+    states_df = State.dataframe(State.since(datetime.utcnow() - timedelta(hours=hours)))
+    resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
+    temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
 
-    temp_graph_params = _plot_temps(
-        list(resampled_samples.data), list(resampled_samples.index), set_points=list(resampled_states.data)
-    )
     temp_graph_params["inside_temp"] = _get_latest_temp()
     temp_graph_params["set_point"] = _get_set_point()
     temp_graph_params["heat"] = _get_heat()
     return render_template("dashboard.html", **temp_graph_params)
+
 
 @root.route("/")
 def index():

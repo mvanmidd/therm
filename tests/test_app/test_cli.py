@@ -17,7 +17,7 @@ def mock_relay(mocker):
 def mock_mpl115(mocker):
     return mocker.patch('{}.mpl115'.format(cli.__name__))
 
-def test_adjust_temp(mock_buttons, app, fake_state):
+def test_adjust_temp(mock_buttons, app, fake_states):
     cli._register_buttons()
     mock_buttons.register_on_off.assert_called_once()
     mock_buttons.register_temp_up.assert_called_once()
@@ -35,7 +35,7 @@ def test_adjust_temp(mock_buttons, app, fake_state):
     assert after.set_point == before.set_point + cli.TEMP_INCREMENT
     assert after.set_point_enabled
 
-def test_set_point(mock_mpl115, mock_relay, app, fake_state):
+def test_set_point(mock_mpl115, mock_relay, app, fake_states):
     State.update_state('set_point', 72)
     State.update_state('set_point_enabled', True)
     State.update_state('heat_on', False)
@@ -46,13 +46,13 @@ def test_set_point(mock_mpl115, mock_relay, app, fake_state):
     after = State.latest()
     assert after.heat_on
 
-def test_read_write_temp(mock_mpl115, app, fake_state):
+def test_read_write_temp(mock_mpl115, app, fake_states):
     mock_mpl115.read.return_value = (10, 10)
     cli._poll_once()
     mock_mpl115.read.assert_called_once()
     assert Sample.latest().temp == 10
 
-def test_thread_safe(mock_buttons, app, fake_state):
+def test_thread_safe(mock_buttons, app, fake_states):
     """Test thread safety.
 
     The callbacks in the GPIO run in their own thread, so they will not have app context. We can't use the GPIO library

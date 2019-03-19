@@ -47,6 +47,15 @@ def create_app(config_env=None):
         file_handler.setFormatter(logging.Formatter("<%(asctime)s> <%(levelname)s> %(message)s"))
         app.logger.addHandler(file_handler)
 
+    import json
+
+    def jsonfilter(value):
+        if isinstance(value, str):
+            return value
+        return json.dumps(value)
+
+    app.jinja_env.filters['json'] = jsonfilter
+
     app.logger.warning("Loaded app with settings: {}".format(env))
 
     from .models import db

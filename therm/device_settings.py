@@ -64,4 +64,4 @@ class Zero(DeviceSettingsBase):
     SSD1306_I2C_ADDRESS = 0x3C
 
     RELAY_ENABLED = True
-    RELAY_GPIO = 4  # GPIO 4, Physical pin 7 on raspi. LOW turns relay on.
+    RELAY_GPIO = 17  # GPIO 17, Physical pin 11 on raspi. LOW turns relay on.

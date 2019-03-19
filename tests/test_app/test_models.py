@@ -2,7 +2,7 @@ import pytest
 import itertools
 from datetime import datetime, timedelta
 import random
-from therm.models import db, Sample, State, interpolate_multiple, interpolate_samples_states
+from therm.models import db, Sample, State, jointerpolate
 
 START_TIME = datetime.strptime("2018-06-01T00:00:00", "%Y-%m-%dT%H:%M:%S")
 END_TIME = START_TIME + timedelta(hours=10)
@@ -66,23 +66,23 @@ def test_since(app, fake_samples):
 def test_resample_not_enough_data(app, fake_samples, fake_states):
     samples_ts = Sample.timeseries(fake_samples[-10:])
     states_ts = State.timeseries(fake_states[-2:])
-    res_samples, res_states = interpolate_samples_states(samples_ts, states_ts, max_points=10)
+    res_samples, res_states = jointerpolate([samples_ts, states_ts], max_points=10)
     assert 8 < len(samples_ts) < 12
     # There is not enough data to make a reasonable interpolation for states, so we mostly care that this
     # didn't crash and returned something
     assert states_ts is not None
 
 def test_resample_samples_states(app, fake_samples, fake_states):
-    samples_ts = Sample.timeseries(fake_samples)
-    states_ts = State.timeseries(fake_states)
-    res_samples, res_states = interpolate_samples_states(samples_ts, states_ts, max_points=50)
+    samples_ts = Sample.dataframe(fake_samples)
+    states_ts = State.dataframe(fake_states)
+    res_samples, res_states = jointerpolate([samples_ts, states_ts], max_points=50)
     assert 40 < len(res_samples) < 55
     assert 40 < len(res_states) < 55
 
     # assert interpolate_multiple yields same results as interpolate_samples_states
-    resampled_list = interpolate_multiple([samples_ts, states_ts], max_points=50)
-    assert all(res_samples == resampled_list[0])
-    assert all(res_states == resampled_list[1])
+    resampled_samples, resampled_states = jointerpolate([samples_ts, states_ts], max_points=50)
+    assert 40 < len(resampled_samples) < 55
+    assert 40 < len(resampled_states) < 55
 
 def test_resample(app, fake_samples):
     latest = Sample.latest(limit=10)
@@ -97,7 +97,7 @@ def test_resample(app, fake_samples):
     assert 82 <= len(resampled.mean().index) <= 98
     assert all([40 <= t <= 80 for t in resampled.interpolate(method='linear')])
 
-def test_update_state(app, fake_state):
+def test_update_state(app, fake_states):
     latest = State.latest()
     State.update_state('set_point_enabled', not latest.set_point_enabled)
     new_state = State.latest()
@@ -118,8 +118,8 @@ def test_timeseries(app, fake_samples):
     assert 582 <= len(resampled.mean().index) <= 598
     assert all([40 <= t <= 80 for t in resampled.interpolate(method='linear')])
 
-def test_get_states(app, fake_state):
+def test_get_states(app, fake_states):
     latest = State.latest()
     assert latest
-    assert latest.id == fake_state.id
+    assert latest.id == fake_states[-1].id
 

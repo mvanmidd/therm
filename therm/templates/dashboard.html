@@ -17,71 +17,31 @@
 <button id="off">Off</button>
 <!--<canvas id="line-chart"></canvas>-->
 <!--<canvas id="line-chart" style="height: 400px; width: 100%; border:1px solid #000000;"></canvas>-->
-<canvas id="line-chart"></canvas>
+<!--<canvas id="line-chart"></canvas>-->
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='make_chart.js') }}"></script>
 
+<div class="chart-container" style="position: relative; height:60vh; width:80vw">
+    <canvas id="line-chart"></canvas>
+</div>
+
+<a href="{{ url_for('root.dashboard', hours=2) }}">2 hours</a>
+<a href="{{ url_for('root.dashboard', hours=12) }}">12 hours</a>
+<a href="{{ url_for('root.dashboard', hours=24) }}">24 hours</a>
+<a href="{{ url_for('root.dashboard', hours=48) }}">48 hours</a>
 
 
 <script>
-    var options = { hour: 'numeric', minute: '2-digit' };
     var labels = [{% for item in labels %} "{{ item }}", {% endfor %}]
     var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
     var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
     var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
 
-    chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
-        type: 'line',
+    window.onload = function() {
+        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, true)
+    };
 
-        data: {
-          labels: labels,
-          datasets: [{
-              data: temp_values,
-              label: "Temperature",
-              backgroundColor: window.chartColors.green,
-              borderColor: window.chartColors.green,
-              fill: false
-            },
-            {label: 'Set point',
-            data: set_points_heatoff,
-					fill: false,
-					backgroundColor: window.chartColors.blue,
-					borderColor: window.chartColors.blue,
-					borderDash: [5, 5],
-		    },
-            ]
-        },
-        options: {
-            title: {
-              display: false,
-            },
-            legend: {
-                display: true,
-            },
-            animation: {
-                duration: 800
-            },
-            elements: {
-                point:{
-                    radius: 0
-                }
-            },
-            tooltips: {enabled: false},
-            hover: {mode: null},
-            scales: {
-                yAxes: [{
-                    display: true,
-                    ticks: {
-                        suggestedMin: {{ y_min }},
-                        suggestedMax: {{ y_max }},
-                    }
-                }],
-                xAxes: [{
-                    display: true,
-                }]
-            }
-        }
-    });
 </script>
 
 </body>

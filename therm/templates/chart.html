@@ -1,127 +1,26 @@
 <meta charset="utf-8">
-<META HTTP-EQUIV="refresh" CONTENT="5">
+<!--<META HTTP-EQUIV="refresh" CONTENT="5">-->
 <title>RaspiTherm</title>
 
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
 <h1>Temp: {{ '%0.2f'| format(inside_temp) }}   Set Point: {{ set_point }} Heat: {{ heat }}</h1>
 <body>
 <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
+<script src="{{ url_for('static', filename='make_chart.js') }}"></script>
 
 </body>
 
 <script>
-    var labels = [{% for item in labels %} "{{item}}", {% endfor %}]
-    var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
-    var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
-    var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
+    var labels = [{% for item in labels %} "{{item if item else "null"}}", {% endfor %}]
+    var temp_values = [{% for item in temp_values %} {{item if item else "null"}}, {% endfor %}]
+    var set_points_heaton = [{% for item in set_points_heaton %} {{item if item else "null"}}, {% endfor %}]
+    var set_points_heatoff = [{% for item in set_points_heatoff %} {{item if item else "null"}}, {% endfor %}]
 
-    chart = new Chart(document.getElementById("line-chart").getContext("2d"), {
-        type: 'line',
+    window.onload = function() {
+        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, false)
+    };
 
-        data: {
-          labels: labels,
-          datasets: [{
-              data: temp_values,
-              label: "Temperature",
-              borderColor: window.chartColors.green,
-              fill: false
-            },
-            {label: 'Set point',
-            data: set_points_heatoff,
-					fill: false,
-					backgroundColor: window.chartColors.blue,
-					borderColor: window.chartColors.blue,
-					borderDash: [5, 5],
-		    },
-            {label: 'Set point',
-            data: set_points_heaton,
-					fill: false,
-					backgroundColor: window.chartColors.red,
-					borderColor: window.chartColors.red,
-					borderDash: [5, 5],
-		    }
-            ]
-        },
-        options: {
-            title: {
-              display: false,
-            },
-            legend: {
-                display: false,
-            },
-            animation: {
-                duration: 0
-            },
-            elements: {
-                point:{
-                    radius: 0
-                }
-            },
-            responsive: false,
-            maintainAspectRatio: false,
-            tooltips: {enabled: false},
-            hover: {mode: null},
-            scales: {
-                yAxes: [{
-                    display: true,
-                    ticks: {
-                        suggestedMin: {{ y_min }},
-                        suggestedMax: {{ y_max }},
-                    }
-                }],
-                xAxes: [{
-                    display: true,
-                }]
-            }
-        }
-    });
-    <!--chart.canvas.parentNode.style.height = '200px';-->
-    <!--chart.canvas.parentNode.style.width = '320px';-->
+
 </script>
-<!--<script>-->
-   <!--// bar chart data-->
-   <!--var barData = {-->
-   <!--labels : [{% for item in labels %}-->
-                  <!--"{{item}}",-->
-              <!--{% endfor %}],-->
-   <!--datasets : [-->
-      <!--{-->
-            <!--fillColor: "rgba(151,187,205,0.2)",-->
-            <!--strokeColor: "rgba(151,187,205,1)",-->
-            <!--pointColor: "rgba(151,187,205,1)",-->
-            <!--pointStrokeColor: "#fff",-->
-            <!--pointHighlightFill: "#fff",-->
-            <!--pointHighlightStroke: "rgba(151,187,205,1)",-->
-            <!--bezierCurve : false,-->
-            <!--data : [{% for item in values %}-->
-                      <!--{{item}},-->
-                    <!--{% endfor %}]-->
-      <!--}]-->
-   <!--}-->
-    <!--Chart.defaults.global.animationSteps = 50;-->
-    <!--Chart.defaults.global.tooltipYPadding = 16;-->
-    <!--Chart.defaults.global.tooltipCornerRadius = 0;-->
-    <!--Chart.defaults.global.tooltipTitleFontStyle = "normal";-->
-    <!--Chart.defaults.global.tooltipFillColor = "rgba(0,0,0,0.8)";-->
-    <!--Chart.defaults.global.animationEasing = "easeOutBounce";-->
-    <!--Chart.defaults.global.responsive = false;-->
-    <!--Chart.defaults.global.scaleLineColor = "black";-->
-    <!--Chart.defaults.global.scaleFontSize = 16;-->
-    <!--// get bar chart canvas-->
-    <!--var mychart = document.getElementById("chart").getContext("2d");-->
-   <!--steps = 10-->
-   <!--max = 10-->
-   <!--// draw bar chart-->
-   <!--new Chart(document.getElementById("chart").Line(barData, {-->
-        <!--scaleOverride: true,-->
-        <!--scaleSteps: steps,-->
-        <!--scaleStepWidth: Math.ceil(max / steps),-->
-        <!--scaleStartValue: 0,-->
-        <!--scaleShowVerticalLines: true,-->
-        <!--scaleShowGridLines : true,-->
-        <!--barShowStroke : true,-->
-        <!--scaleShowLabels: true,-->
-        <!--bezierCurve: false,-->
-   <!--});-->
-<!--</script>-->
