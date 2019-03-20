@@ -25,6 +25,21 @@ class DeviceSettingsBase(object):
     RELAY_GPIO = 0
 
 
+class Buttons(DeviceSettingsBase):
+    """Full size pi 2 B+ with 2.2" TFT hat, temp sensor, and relay control."""
+
+    BUTTONS_ENABLED = True
+    PIN_TEMP_ON_OFF = 17
+    PIN_TEMP_DOWN = 22
+    PIN_TEMP_UP = 23
+    PIN_TEMP_HOLD = 27
+
+    TEMP_SENSOR_ENABLED = False
+
+    OLED_ENABLED = False
+
+    RELAY_ENABLED = False
+
 class Primary(DeviceSettingsBase):
     """Full size pi 2 B+ with 2.2" TFT hat, temp sensor, and relay control."""
 

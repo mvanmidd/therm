@@ -150,7 +150,7 @@ def setpt_down():
     return jsonify(State.latest()._asdict()), 200
 
 
-@root.route("/dashboard")
+@root.route("/")
 def dashboard():
     hours = float(request.args.get("hours")) if request.args.get("hours") else 12
     samples_df = Sample.dataframe(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
@@ -162,9 +162,3 @@ def dashboard():
     temp_graph_params["set_point"] = _get_set_point()
     temp_graph_params["heat"] = _get_heat()
     return render_template("dashboard.html", **temp_graph_params)
-
-
-@root.route("/")
-def index():
-    temp = _get_latest_temp()
-    return render_template("chaeron.html", inside_temp=temp)

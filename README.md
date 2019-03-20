@@ -135,4 +135,53 @@ To run everything on a single device, add to `/etc/xdg/lxsession/LXDE-pi/autosta
 @/bin/bash /home/pi/devel/therm/run_all.sh
 ```
 
+### uWSGI + nginx
 
+Install nginx and uwsgi globally (make sure you're using python 3 install!):
+```bash
+sudo pip3 install uwsgi
+sudo apt-get install nginx
+```
+
+Add your site config in `/etc/nginx/sites-available/therm.conf`:
+```
+server {
+	listen 80;
+	server_name pi.local;
+
+	location / {
+	    include uwsgi_params;
+	    uwsgi_pass unix:/tmp/uwsgi/therm.sock;
+	}
+}
+```
+
+Create a systemd service for uwsgi in `/etc/systemd/system/uwsgi.service`
+```
+[Unit]
+Description=uWSGI instance to serve therm
+
+[Service]
+ExecStartPre=-/bin/bash -c 'mkdir -p /tmp/uwsgi; chown www-data /tmp/uwsgi'
+ExecStart=/bin/bash -c 'cd /home/pi/devel/therm; source /home/pi/.virtualenvs/therm/bin/activate; uwsgi --ini uwsgi.ini --logto /var/log/therm.log'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Test it:
+```bash
+sudo systemctl start uwsgi
+```
+
+Launch nginx and make sure everything's working:
+```bash
+sudo service nginx start
+```
+
+If everything works, you can have nginx and uwsgi launch on boot:
+```bash
+$ sudo systemctl enable nginx
+$ sudo systemctl enable uwsgi
+
+```

@@ -15,9 +15,6 @@
 <button id="up">Up</button>
 <button id="down">Down</button>
 <button id="off">Off</button>
-<!--<canvas id="line-chart"></canvas>-->
-<!--<canvas id="line-chart" style="height: 400px; width: 100%; border:1px solid #000000;"></canvas>-->
-<!--<canvas id="line-chart"></canvas>-->
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='make_chart.js') }}"></script>
@@ -26,10 +23,12 @@
     <canvas id="line-chart"></canvas>
 </div>
 
+<a href="{{ url_for('root.dashboard', hours=1) }}">1 hour</a>
 <a href="{{ url_for('root.dashboard', hours=2) }}">2 hours</a>
 <a href="{{ url_for('root.dashboard', hours=12) }}">12 hours</a>
 <a href="{{ url_for('root.dashboard', hours=24) }}">24 hours</a>
 <a href="{{ url_for('root.dashboard', hours=48) }}">48 hours</a>
+<a href="{{ url_for('root.dashboard', hours=168) }}">1 week</a>
 
 
 <script>

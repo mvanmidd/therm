@@ -18,7 +18,8 @@ def jointerpolate(objs, max_points=50):
     last = new_index.max()
     if not (last - first).total_seconds() > 1:
         return objs
-    secs = int((last - first).total_seconds() // (max_points + 1))
+    # Don't resample more finely than one minute
+    secs = max(int((last - first).total_seconds() // (max_points + 1)), 60)
     periodsize = "{:d}S".format(secs)
     return (o.resample(periodsize).first() for o in objs)
 

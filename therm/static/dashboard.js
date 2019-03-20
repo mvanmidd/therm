@@ -55,7 +55,7 @@ function updateHeat () {
         if(request.readyState === 4) {
             if(request.status === 200) {
                 var new_state = JSON.parse(request.responseText);
-                heatText.textContent = new_state.heat_on ? "On" : "off";
+                heatText.textContent = new_state.heat_on ? "On" : "Off";
             }
         }
    };

@@ -1,11 +1,13 @@
 <meta charset="utf-8">
-<!--<META HTTP-EQUIV="refresh" CONTENT="5">-->
+<META HTTP-EQUIV="refresh" CONTENT="30">
 <title>RaspiTherm</title>
 
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
-<h1>Temp: {{ '%0.2f'| format(inside_temp) }}   Set Point: {{ set_point }} Heat: {{ heat }}</h1>
+<h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>
+Set Point: <span id="set-pt-txt"> {{ set_point }}</span>
+Heat: <span id="heat-txt">{{ heat }}</span></h1>
 <body>
 <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
 <script src="{{ url_for('static', filename='make_chart.js') }}"></script>

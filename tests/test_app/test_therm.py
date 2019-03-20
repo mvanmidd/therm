@@ -59,10 +59,5 @@ def test_get_chart_default(client, fake_samples, fake_states):
 
 
 def test_get_dashboard_default(client, fake_samples, fake_states):
-    response = client.get("/dashboard")
+    response = client.get("/")
     assert response.status_code == 200
-
-
-def test_get_main(client):
-    rv = client.get("/")
-    assert "Temp: " in rv.data.decode()

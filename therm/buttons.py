@@ -19,6 +19,7 @@ from RPi import GPIO
 
 
 def init(app):
+    GPIO.setmode(GPIO.BCM)
     for pin in (app.config["PIN_TEMP_DOWN"], app.config["PIN_TEMP_UP"], app.config["PIN_TEMP_ON_OFF"]):
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
