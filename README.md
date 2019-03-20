@@ -3,6 +3,7 @@
 A Raspberry Pi thermostat control app
 
 ![Pi Model B with screen displaying thermostat](therm/static/img/3b_with_screen.jpg?raw=true)
+![Dashboard in web browser](therm/static/img/dashboard_screenshot.jpg?raw=true)
 ![](therm/static/img/mag_wire_shield.jpg?raw=true)
 ![](therm/static/img/zero_with_shield_front.jpg?raw=true)
 
