@@ -5,6 +5,7 @@
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
+<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>
 Set Point: <span id="set-pt-txt"> {{ set_point }}</span>
 Heat: <span id="heat-txt">{{ heat }}</span></h1>
@@ -21,8 +22,25 @@ Heat: <span id="heat-txt">{{ heat }}</span></h1>
     var set_points_heatoff = [{% for item in set_points_heatoff %} {{item if item else "null"}}, {% endfor %}]
 
     window.onload = function() {
-        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, false)
+        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, false);
     };
+    var setPtText = document.getElementById('set-pt-txt')
+    function updateSetPoint () {
+        var request = new XMLHttpRequest();
+        request.open('GET', '/states/latest');
+        request.onreadystatechange = function() {
+            if(request.readyState === 4) {
+                if(request.status === 200) {
+                    var new_setpt = JSON.parse(request.responseText);
+                    setPtText.textContent = new_setpt.set_point.toFixed(1);
+                }
+            }
+       };
+       request.send();
+    }
+    $(document).ready(function() {
+        window.setInterval(updateSetPoint, 5000);
+    });
 
 
 </script>

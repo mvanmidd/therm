@@ -33,6 +33,20 @@ function adjustSetPoint (cmd) {
    updateHeat();
 }
 
+function updateSetPoint () {
+    var request = new XMLHttpRequest();
+    request.open('GET', '/states/latest');
+    request.onreadystatechange = function() {
+        if(request.readyState === 4) {
+            if(request.status === 200) {
+                var new_setpt = JSON.parse(request.responseText);
+                setPtText.textContent = new_setpt.set_point.toFixed(1);
+            }
+        }
+   };
+   request.send();
+}
+
 function updateTemp () {
     var request = new XMLHttpRequest();
     request.open('GET', '/samples/latest');
