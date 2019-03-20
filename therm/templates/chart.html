@@ -2,15 +2,18 @@
 <META HTTP-EQUIV="refresh" CONTENT="30">
 <title>RaspiTherm</title>
 
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>
-Set Point: <span id="set-pt-txt"> {{ set_point }}</span>
-Heat: <span id="heat-txt">{{ heat }}</span></h1>
+    Set Point: <span id="set-pt-txt"> {{ set_point }}</span>
+    Heat: <span id="heat-txt">{{ heat }}</span></h1>
 <body>
-<canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
+<div class="chart-container" align="center" style="position: relative; height:60vh; width:90vw; margin-left: auto; margin-right: auto">
+    <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
+    <!--<canvas id="line-chart"></canvas>-->
+</div>
 <script src="{{ url_for('static', filename='make_chart.js') }}"></script>
 
 </body>
@@ -41,6 +44,7 @@ Heat: <span id="heat-txt">{{ heat }}</span></h1>
     $(document).ready(function() {
         window.setInterval(updateSetPoint, 5000);
     });
+
 
 
 </script>

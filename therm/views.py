@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 
+from dateutil.parser import parse
 import pandas as pd
 import numpy as np
 
@@ -100,12 +101,24 @@ def _get_set_point():
     if state and state.set_point_enabled:
         return state.set_point
     else:
-        return "off"
+        return "Off"
 
 
 def _get_heat():
     state = State.latest()
     return "On" if state.heat_on else "Off"
+
+def _get_samples_states(hours=None, t0=None, t1=None):
+    if not (t0 and t1):
+        hours = float(hours) if hours else 12
+        t0 = datetime.utcnow() - timedelta(hours=hours)
+        t1 = None
+    else:
+        t0 = parse(t0)
+        t1 = parse(t1)
+    samples_df = Sample.dataframe(Sample.since(tmin=t0, tmax=t1))
+    states_df = State.dataframe(State.since(tmin=t0, tmax=t1))
+    return samples_df, states_df
 
 
 @root.route("/chart")
@@ -116,9 +129,7 @@ def chart():
         n: latest n samples
         hours: latest `hours` hours, default 12
     """
-    hours = float(request.args.get("hours")) if request.args.get("hours") else 12
-    samples_df = Sample.dataframe(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
-    states_df = State.dataframe(State.since(datetime.utcnow() - timedelta(hours=hours)))
+    samples_df, states_df = _get_samples_states(**(request.args.to_dict()))
     resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
     temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
     temp_graph_params["inside_temp"] = _get_latest_temp()
@@ -152,12 +163,9 @@ def setpt_down():
 
 @root.route("/")
 def dashboard():
-    hours = float(request.args.get("hours")) if request.args.get("hours") else 12
-    samples_df = Sample.dataframe(Sample.since(datetime.utcnow() - timedelta(hours=hours)))
-    states_df = State.dataframe(State.since(datetime.utcnow() - timedelta(hours=hours)))
+    samples_df, states_df = _get_samples_states(**(request.args.to_dict()))
     resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
     temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
-
     temp_graph_params["inside_temp"] = _get_latest_temp()
     temp_graph_params["set_point"] = _get_set_point()
     temp_graph_params["heat"] = _get_heat()

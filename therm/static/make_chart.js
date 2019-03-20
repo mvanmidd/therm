@@ -5,18 +5,19 @@ chart = new Chart(element, {
     data: {
       labels: labels,
       datasets: [{
-          data: temp_values,
-          label: "Temperature",
-          borderColor: window.chartColors.green,
-          fill: false,
-          spanGaps: true,
+            data: temp_values,
+            label: "Temperature",
+            borderColor: window.chartColors.green,
+            borderWidth: 5,
+            fill: false,
+            spanGaps: true,
         },
         {label: 'Set point',
         data: set_points_heatoff,
                 fill: false,
-                backgroundColor: 'rgb(54, 162, 235, .5)',
-                borderColor: 'rgb(54, 162, 235, .5)',
-//                borderDash: [5, 5],
+                backgroundColor: 'rgba(54, 162, 235, .5)',
+                borderColor: 'rgba(54, 162, 235, .5)',
+                borderWidth: 5,
                 spanGaps: false,
         },
         {label: 'Set point',
@@ -24,7 +25,7 @@ chart = new Chart(element, {
                 fill: true,
                 backgroundColor: 'rgba(255, 99, 132, .2)',
                 borderColor: 'rgb(255, 99, 132, .5)',
-//                borderDash: [5, 5],
+                borderWidth: 5,
                 spanGaps: false,
         }
         ]
@@ -41,7 +42,7 @@ chart = new Chart(element, {
         },
         elements: {
             point:{
-                radius: 1
+                radius: 0
             }
         },
         responsive: responsive,

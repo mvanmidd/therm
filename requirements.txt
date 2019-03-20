@@ -5,3 +5,4 @@ pandas
 scipy
 boto3
 pillow
+python-dateutil

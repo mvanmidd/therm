@@ -7,11 +7,13 @@ button {
   border: none;
   color: white;
   padding: 15px 32px;
+  margin: 10px 20px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
   font-size: 28px;
-  width: 30%;
+  width: 25%;
   height: 80px;
+  position: relative;
+  display: inline-block;
 }
 

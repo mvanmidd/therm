@@ -1,14 +1,11 @@
 # therm
 
-Arduino thermostat.
+A Raspberry Pi thermostat control app
 
-### To Do
+![Pi Model B with screen displaying thermostat](therm/static/img/3b_with_screen.jpg?raw=true)
+![](therm/static/img/mag_wire_shield.jpg?raw=true)
+![](therm/static/img/zero_with_shield_front.jpg?raw=true)
 
-* Proper multi-zone filtering
-* Scheduled control
-* Schedule editing in app
-* Schedule editing from device
-* Color chart by whether heat was on/off
 
 ### Install
 

@@ -2,7 +2,7 @@
 <html>
 <title>RaspiTherm</title>
 
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
@@ -12,14 +12,15 @@
 <h2>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span> </h2>
 <h2>Set Point: <span id="set-pt-txt"> {{ set_point }}</span></h2>
 <h2>Heat: <span id="heat-txt">{{ heat }}</span></h2>
+<div id="buttons" style="position:relative; width:100%; text-align:center">
 <button id="up">Up</button>
 <button id="down">Down</button>
 <button id="off">Off</button>
-
+</div>
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='make_chart.js') }}"></script>
 
-<div class="chart-container" style="position: relative; height:60vh; width:80vw">
+<div class="chart-container" align="center" style="position: relative; height:60vh; width:90vw; margin-left: auto; margin-right: auto">
     <canvas id="line-chart"></canvas>
 </div>
 
