@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <meta charset="utf-8">
 <META HTTP-EQUIV="refresh" CONTENT="30">
 <title>RaspiTherm</title>
@@ -6,44 +7,92 @@
 <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
 <script src="{{ url_for('static', filename='utils.js') }}"></script>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
 <h1>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span>
-    Set Point: <span id="set-pt-txt"> {{ set_point }}</span>
+    Set Point: <span id="set-pt-txt"> {% if set_point_enabled %} {{ '%0.2f' | format(set_point) }} {% else %} Off {% endif %}</span>
     Heat: <span id="heat-txt">{{ heat }}</span></h1>
 <body>
-<div class="chart-container" align="center" style="position: relative; height:60vh; width:90vw; margin-left: auto; margin-right: auto">
+<div class="chart-container" align="center" style="position: relative; height:80vh; width:90vw; margin-left: auto; margin-right: auto">
     <canvas id="line-chart" width="320" height="200" style="height: 80%; width: 100%; border:1px solid #000000;"></canvas>
-    <!--<canvas id="line-chart"></canvas>-->
+    <!--<canvas id="line-chart" style="position:relative; height:60vh; width:90vw; auto"></canvas>-->
+    <br>
+    <div id="timespan" style="text-aling:center;"><span id="hrs">12</span>hr</div>
 </div>
 <script src="{{ url_for('static', filename='make_chart.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 
 </body>
 
 <script>
+    var setPt = {{ set_point }};
     var labels = [{% for item in labels %} "{{item if item else "null"}}", {% endfor %}]
     var temp_values = [{% for item in temp_values %} {{item if item else "null"}}, {% endfor %}]
     var set_points_heaton = [{% for item in set_points_heaton %} {{item if item else "null"}}, {% endfor %}]
     var set_points_heatoff = [{% for item in set_points_heatoff %} {{item if item else "null"}}, {% endfor %}]
 
-    window.onload = function() {
-        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, false);
-    };
     var setPtText = document.getElementById('set-pt-txt')
-    function updateSetPoint () {
-        var request = new XMLHttpRequest();
-        request.open('GET', '/states/latest');
-        request.onreadystatechange = function() {
-            if(request.readyState === 4) {
-                if(request.status === 200) {
-                    var new_setpt = JSON.parse(request.responseText);
-                    setPtText.textContent = new_setpt.set_point.toFixed(1);
-                }
-            }
-       };
-       request.send();
-    }
     $(document).ready(function() {
         window.setInterval(updateSetPoint, 5000);
     });
+
+    var cycleMap = {
+        "": "48",
+        "1": "6",
+        "6": "12",
+        "12": "48",
+        "48": "1"
+    };
+
+    function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
+    function cycle() {
+        var tempArray = window.location.href.split("?");
+        currentHour = getUrlVars()["hours"] ?  getUrlVars()["hours"]  : 12;
+        <!--var currentHour = currentParam.split("=")[1];-->
+        var baseURL = tempArray[0];
+        var newParam = "hours=" + cycleMap[currentHour];
+        window.location.replace(baseURL + "?" + newParam);
+
+    }
+
+    document.onkeydown = checkKey;
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        if (e.keyCode == '38') {
+            // up arrow
+            setPt += .5;
+            setSetPoint(setPt);
+        }
+        else if (e.keyCode == '40') {
+            setPt -= .5;
+            setSetPoint(setPt);
+            // down arrow
+        }
+        else if (e.keyCode == '37') {
+           // left arrow
+           cycle();
+        }
+        else if (e.keyCode == '39') {
+           // right arrow
+           adjustSetPoint('setpt-off');
+           updateSetPoint();
+        }
+
+    }
+    window.onload = function() {
+        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, true);
+        currentParam = getUrlVars()["hours"] ?  getUrlVars()["hours"]  : 12;
+        document.getElementById("hrs").textContent = currentParam;
+    };
+
 
 
 

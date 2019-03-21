@@ -1,5 +1,5 @@
 
-$(document).ready(function () {
+//$(document).ready(function () {
 
 //$(".up").on("click",function(e){
 //    e.preventDefault();
@@ -9,42 +9,54 @@ $(document).ready(function () {
 //        data: {}
 //    }
 //});
-var down = document.getElementById('down');
-var off = document.getElementById('off');
-var up = document.getElementById('up');
+
 
 var setPtText = document.getElementById('set-pt-txt')
 var tempText = document.getElementById('temp-txt')
 var heatText = document.getElementById('heat-txt')
 
-function adjustSetPoint (cmd) {
-    var request = new XMLHttpRequest();
-    request.open('POST', cmd);
-    request.onreadystatechange = function() {
-        if(request.readyState === 4) {
-            if(request.status === 200) {
-                var new_setpt = JSON.parse(request.responseText);
-                setPtText.textContent = new_setpt.set_point.toFixed(1);
+
+function setSetPoint (newSetPt) {
+    setPtText.textContent = newSetPt.toFixed(1);
+    $.post('setpt-set', { set_point: newSetPt },
+        function(new_state){
+            if (new_state.set_point_enabled) {
+                setPtText.textContent = new_state.set_point.toFixed(1);
+            } else {
+                setPtText.textContent = "Off";
             }
+            heatText.textContent = new_state.heat_on ? "On" : "Off";
+            updateTemp();
         }
-   };
-   request.send();
-   updateTemp();
-   updateHeat();
+    );
+};
+
+function adjustSetPoint (cmd) {
+    $.post(cmd, {},
+        function(new_state){
+            if (new_state.set_point_enabled) {
+                setPtText.textContent = new_state.set_point.toFixed(1);
+            } else {
+                setPtText.textContent = "Off";
+            }
+            heatText.textContent = new_state.heat_on ? "On" : "Off";
+            updateTemp();
+        }
+    );
 }
 
 function updateSetPoint () {
-    var request = new XMLHttpRequest();
-    request.open('GET', '/states/latest');
-    request.onreadystatechange = function() {
-        if(request.readyState === 4) {
-            if(request.status === 200) {
-                var new_setpt = JSON.parse(request.responseText);
-                setPtText.textContent = new_setpt.set_point.toFixed(1);
+    $.get('/states/latest', {},
+        function(new_state){
+            if (new_state.set_point_enabled) {
+                setPtText.textContent = new_state.set_point.toFixed(1);
+            } else {
+                setPtText.textContent = "Off";
             }
+            heatText.textContent = new_state.heat_on ? "On" : "Off";
+            updateTemp();
         }
-   };
-   request.send();
+    );
 }
 
 function updateTemp () {
@@ -60,58 +72,3 @@ function updateTemp () {
    };
    request.send();
 }
-
-
-function updateHeat () {
-    var request = new XMLHttpRequest();
-    request.open('GET', '/states/latest');
-    request.onreadystatechange = function() {
-        if(request.readyState === 4) {
-            if(request.status === 200) {
-                var new_state = JSON.parse(request.responseText);
-                heatText.textContent = new_state.heat_on ? "On" : "Off";
-            }
-        }
-   };
-   request.send();
-}
-
-down.addEventListener('click', function () {
-    adjustSetPoint('setpt-down');
-})
-
-off.addEventListener('click', function () {
-    adjustSetPoint('setpt-off');
-})
-
-up.addEventListener('click', function () {
-    adjustSetPoint('setpt-up');
-})
-
-
-//down.addEventListener('click', function() {
-//    var request = new XMLHttpRequest();
-//    request.open('POST', 'setpt-down');
-//    request.onreadystatechange = function() {
-//        if(request.readyState === 4) {
-//            if(request.status === 200) {
-//                var new_setpt = JSON.parse(request.responseText);
-////                $(".set-pt").textContent = new_setpt.set_point;
-//                setPtText.textContent = new_setpt.set_point;
-//            }
-//        }
-//   };
-//
-//    request.send();
-//});
-
-
-//$(".off").on("click",function(e){
-//    e.preventDefault();
-//    $.ajax {
-//        url: "/off"
-//        type: "POST",
-//        data: {}
-//    }
-//});
-});

@@ -97,11 +97,7 @@ def _get_latest_temp():
 
 
 def _get_set_point():
-    state = State.latest()
-    if state and state.set_point_enabled:
-        return state.set_point
-    else:
-        return "Off"
+    return State.latest().set_point
 
 
 def _get_heat():
@@ -120,6 +116,16 @@ def _get_samples_states(hours=None, t0=None, t1=None):
     states_df = State.dataframe(State.since(tmin=t0, tmax=t1))
     return samples_df, states_df
 
+def _template_params():
+    latest_state = State.latest()
+    latest_sample = Sample.latest()
+    return {
+        "inside_temp": latest_sample.temp,
+        "set_point": latest_state.set_point,
+        "heat": "On" if latest_state.heat_on else "Off",
+        "set_point_enabled": latest_state.set_point_enabled,
+    }
+
 
 @root.route("/chart")
 def chart():
@@ -132,9 +138,7 @@ def chart():
     samples_df, states_df = _get_samples_states(**(request.args.to_dict()))
     resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
     temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
-    temp_graph_params["inside_temp"] = _get_latest_temp()
-    temp_graph_params["set_point"] = _get_set_point()
-    temp_graph_params["heat"] = _get_heat()
+    temp_graph_params.update(_template_params())
     return render_template("chart.html", **temp_graph_params)
 
 
@@ -153,6 +157,12 @@ def setpt_off():
     return jsonify(State.latest()._asdict()), 200
 
 
+@root.route("/setpt-set", methods=["POST"])
+def setpt_set():
+    State.update_state("set_point_enabled", True)
+    State.update_state("set_point", request.form['set_point'])
+    return jsonify(State.latest()._asdict()), 200
+
 @root.route("/setpt-down", methods=["POST"])
 def setpt_down():
     latest = State.latest()
@@ -166,7 +176,5 @@ def dashboard():
     samples_df, states_df = _get_samples_states(**(request.args.to_dict()))
     resampled_samples, resampled_states = jointerpolate([samples_df, states_df], max_points=MAX_GRAPH_POINTS)
     temp_graph_params = _plot_temps_states(resampled_samples, resampled_states)
-    temp_graph_params["inside_temp"] = _get_latest_temp()
-    temp_graph_params["set_point"] = _get_set_point()
-    temp_graph_params["heat"] = _get_heat()
+    temp_graph_params.update(_template_params())
     return render_template("dashboard.html", **temp_graph_params)

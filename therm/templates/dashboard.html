@@ -10,7 +10,8 @@
 <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
 <body>
 <h2>Temp: <span id="temp-txt">{{ '%0.2f'| format(inside_temp) }}</span> </h2>
-<h2>Set Point: <span id="set-pt-txt"> {{ set_point }}</span></h2>
+<h2>Set Point: <span id="set-pt-txt"> {% if set_point_enabled %} {{ '%0.2f' | format(set_point) }} {% else %} Off {% endif %}</span></h2>
+<!--<h2>Set Point: <span id="set-pt-txt"> {{ set_point }}</span></h2>-->
 <h2>Heat: <span id="heat-txt">{{ heat }}</span></h2>
 <div id="buttons" style="position:relative; width:100%; text-align:center">
 <button id="up">Up</button>
@@ -33,14 +34,33 @@
 
 
 <script>
+    var setPt = {{ set_point }};
     var labels = [{% for item in labels %} "{{ item }}", {% endfor %}]
     var temp_values = [{% for item in temp_values %} "{{item}}", {% endfor %}]
     var set_points_heaton = [{% for item in set_points_heaton %} "{{item}}", {% endfor %}]
     var set_points_heatoff = [{% for item in set_points_heatoff %} "{{item}}", {% endfor %}]
 
-    window.onload = function() {
+    $(document).ready( function() {
         window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, true)
-    };
+        var down = document.getElementById('down');
+        var off = document.getElementById('off');
+        var up = document.getElementById('up');
+
+        down.addEventListener('click', function () {
+            setPt -= .5;
+            setSetPoint(setPt);
+        })
+
+        off.addEventListener('click', function () {
+            adjustSetPoint('setpt-off');
+            updateSetPoint();
+        })
+
+        up.addEventListener('click', function () {
+            setPt += .5;
+            setSetPoint(setPt);
+        })
+    });
 
 </script>
 
