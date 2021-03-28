@@ -65,7 +65,7 @@ def fake_samples(app):
 def test_since(app, fake_samples):
     latest = Sample.since(END_TIME - timedelta(minutes=15))
     ts = Sample.timeseries(latest)
-    assert len(ts.data) == 1
+    assert len(ts) == 1
 
 
 def test_resample_not_enough_data(app, fake_samples, fake_states):
@@ -95,7 +95,7 @@ def test_resample(app, fake_samples):
     latest = Sample.latest(limit=10)
     assert len(latest) == 10
     ts = Sample.timeseries(latest)
-    assert list(ts.data) == [s.temp for s in latest]
+    assert list(ts) == [s.temp for s in latest]
     tmin, tmax = min(ts.index), max(ts.index)
     assert tmin < tmax
     assert END_TIME - timedelta(minutes=104) <= tmin < END_TIME - timedelta(minutes=96)
@@ -118,7 +118,7 @@ def test_timeseries(app, fake_samples):
     latest = Sample.latest(limit=len(fake_samples))
     assert len(latest) == len(fake_samples)
     ts = Sample.timeseries(latest)
-    assert list(ts.data) == [s.temp for s in latest]
+    assert list(ts) == [s.temp for s in latest]
     tmin, tmax = min(ts.index), max(ts.index)
     assert tmin < tmax
     assert START_TIME - timedelta(minutes=4) <= tmin < START_TIME + timedelta(minutes=4)

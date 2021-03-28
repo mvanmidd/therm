@@ -88,7 +88,7 @@
 
     }
     window.onload = function() {
-        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, true);
+        window.chart = makeChart(document.getElementById("line-chart").getContext("2d"), labels, temp_values, set_points_heaton, set_points_heatoff, {{ y_min }}, {{ y_max }}, false);
         currentParam = getUrlVars()["hours"] ?  getUrlVars()["hours"]  : 12;
         document.getElementById("hrs").textContent = currentParam;
     };
